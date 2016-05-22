@@ -3,10 +3,11 @@
 /**
  * @todo заменить topic на category
  * @todo заменить top на parentId
+ * @todo вынести работу с характеристиками в поведение
+ * @todo ипользовать парадигму модели
  */
 class Catalog extends CmsModule
 {
-    private $moduleName = "Каталог";
     private $productsFilter;
     private $currentTopicTypes;
     private $paging_rendered;
@@ -51,12 +52,6 @@ class Catalog extends CmsModule
     private $products;
 
     /**
-     * <p>Массив предопределенных действий</p>
-     * @var Array
-     */
-    private $actions;
-
-    /**
      * <p>Массив параметров фильтов</p>
      * @var Array
      */
@@ -80,8 +75,17 @@ class Catalog extends CmsModule
     public function __construct ( $alias, $parent, $config )
     {
         parent::__construct ( $alias, $parent );
-        if ( !session_id () )
-            session_start ();
+
+        $this->title = $this->currentDocument ? $this->currentDocument->title : "Каталог";
+        $this->actions =
+        [
+            "subcat" => [ 'method' => "completeSubInfo" ],
+            'getlist' => [ 'method' => 'GetList', 'name' => '' ],
+            'seen' => [ 'method' => 'Seen', 'name' => 'Вы смотрели' ],
+            'search' => [ 'method' => 'searchSubInfo', 'name' => 'Поиск по каталогу' ],
+            'compare' => [ 'method' => 'Compare', 'name' => 'Сравнение товаров' ],
+            'filter' => [ 'method' => 'productsListView', 'name' => 'Поиск по параметрам' ]
+        ];
 
         $this->currentCategoryId = 0;
         $this->data = Starter::app ()->data;
@@ -90,20 +94,19 @@ class Catalog extends CmsModule
         $this->parentCategories = [];
         $this->products = [];
         $this->filters = [];
-        $this->actions =
-        [
-            'getlist' => [ 'method' => 'GetList', 'name' => '' ],
-            'seen' => [ 'method' => 'Seen', 'name' => 'Вы смотрели' ],
-            'search' => [ 'method' => 'searchProducts', 'name' => 'Поиск по каталогу' ],
-            'compare' => [ 'method' => 'Compare', 'name' => 'Сравнение товаров' ],
-            'filter' => [ 'method' => 'productsListView', 'name' => 'Поиск по параметрам' ]
-        ];
+
         $this->useShortUrl = Tools::getSettings ( __CLASS__, "useShortUrl", "N" ) != "N";
     }
 
     public function SubMenu ()
     {
-        $topics = SqlTools::selectRows ( "SELECT * FROM `prefix_products_topics` WHERE `top` = '0' AND `deleted` = 'N' AND `show` = 'Y'" );
+        $topics = SqlTools::selectObjects ( "SELECT `id` AS id, `top` AS parentId, `name` AS title, IF(`nav`='',`id`,`nav`) AS nav FROM `prefix_products_topics` WHERE `top`='0' AND `deleted`='N' AND `show`='Y'" );
+        foreach ( $topics as $key => $top )
+        {
+            $top->link = "/" . preg_replace ( '/\\/*/', '', $top->nav );
+            $topics[$key] = (array) $top;
+        }
+
         return $topics;
     }
 
@@ -112,8 +115,14 @@ class Catalog extends CmsModule
      */
     public function Run ()
     {
-        $this->buildModulePath ();
-        return $this->startController ();
+        $action = $this->createAction ();
+        if ( $action )
+            return $action->run ();
+        else
+        {
+            $this->buildModulePath ();
+            return $this->startController ();
+        }
     }
 
     /**
@@ -141,7 +150,7 @@ class Catalog extends CmsModule
      */
     private function buildModulePath ()
     {
-        //$this->getCurrentDocument ();
+
         $requestUri = filter_input ( INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_STRING );
         $request = strpos ( $requestUri, '?' ) !== false ? substr ( $requestUri, 0, strpos ( $requestUri, '?' ) ) : $requestUri;
         $mlink = trim ( str_replace ( Starter::app ()->content->getLinkById ( $this->currentDocument->id ), '', $request ) );
@@ -151,9 +160,7 @@ class Catalog extends CmsModule
         if ( $checked && array_key_exists ( $checked, $this->actions ) )
         {
             if ( !method_exists ( $this, $this->actions[$checked]['method'] ) )
-            {
                 page404 ();
-            }
 
             $paramsPath[] =
             [
@@ -226,24 +233,16 @@ class Catalog extends CmsModule
             $navWhere = "";
             $productFindParam = array ( "deleted" => 'N', "show" => 'Y' );
             if ( is_numeric ( $productParam ) )
-            {
                 $productFindParam["id"] = ( int ) $productParam;
-            }
             else
-            {
                 $navWhere = "p.`nav`='" . SqlTools::escapeString ( $productParam ) . "'";
-            }
 
             $productData = $this->findProducts ( $productFindParam, $navWhere );
             $productCount = count ( $productData );
             if ( $productCount == 0 )
-            {
                 page404 ();
-            }
             else
-            {
                 $this->product = ArrayTools::head ( $productData );
-            }
 
             if ( $this->useShortUrl )
             {
@@ -293,9 +292,7 @@ class Catalog extends CmsModule
         }
 
         if ( $level === 0 && $categoryId == $this->currentCategoryId )
-        {
             $this->childCategories = $childCategories;
-        }
 
         return $childCategories;
     }
@@ -311,9 +308,7 @@ class Catalog extends CmsModule
         $parentCategory = $categoryId ? : $this->currentCategoryId;
 
         if ( !$parentCategory )
-        {
             return;
-        }
 
         $parentCategories = array ();
 
@@ -328,88 +323,42 @@ class Catalog extends CmsModule
         $this->parentCategories = $parentCategories;
         return $parentCategories;
     }
-    /**
-     * <p>Массив SEO-параметров</p>
-     * @var Array
-     */
-    //private $seo;
-
-    /**
-     * SEO для каталога
-     * @param int $id
-     */
-//    private function seo ( $table, $id = 0, $module = __CLASS__ )
-//    {
-//        $header = Starter::app ()->headManager;
-//        $this->seo = SqlTools::selectRow ( "SELECT * FROM `prefix_seo` WHERE `module`='" . $module . "' AND `module_id`=" . ( int ) $id . " AND `module_table`='" . $table . "'", MYSQL_ASSOC );
-//        if ( !empty ( $this->seo ) )
-//        {
-//            //Keywords
-//            if ( !empty ( $this->seo['keywords'] ) )
-//            {
-//                $header->addMetaText ( "<meta name='keywords' content='" . htmlspecialchars ( $this->seo['keywords'] ) . "' />" );
-//            }
-//            //Description
-//            if ( !empty ( $this->seo['description'] ) )
-//            {
-//                $header->addMetaText ( "<meta name='description' content='" . htmlspecialchars ( $this->seo['description'] ) . "' />" );
-//            }
-//            //Title
-//            if ( !empty ( $this->seo['title'] ) )
-//            {
-//                $this->seo['title'] = trim ( $this->seo['title'] );
-//            }
-//            else
-//            {
-//                $this->seo['title'] = ( Starter::app ()->title ? Starter::app ()->title . "  — " : "" ) . $this->currentDocument->title;
-//            }
-//        }
-//        else
-//        {
-//            $headTitle = array ( $this->moduleName );
-//            foreach ( $this->path as $path )
-//            {
-//                if ( $path['type'] == 'topic' )
-//                {
-//                    $headTitle[] = $path['data']->name;
-//                }
-//            }
-//
-//            if ( $this->product )
-//            {
-//                $headTitle[] = $this->product->name;
-//            }
-//
-//            $this->seo['title'] = ( Starter::app ()->title ? Starter::app ()->title . "  — " : "" ) . implode ( ' — ', $headTitle );
-//        }
-//        $header->setTitle ( $this->seo['title'] );
-//    }
 
     /**
      * <p>Запуск метода-действия модуля</p>
      * @return String <p>Html-текст</p>
      */
-    private function startController ()
+    public function startController ( $method = null, $params = null )
     {
-        $alterAction = current ( $this->path );
-        if ( $alterAction['type'] == 'alterPage' )
-        {
-            return $this->$alterAction['method'] ();
-        }
-
-        $action = end ( $this->path );
-        if ( empty ( $this->path ) )
-        {
-            return $this->mainPageView (); //Главная каталога
-        }
-        elseif ( $action['type'] == 'product' )
-        {
-            return $this->productCardView (); //Товар
-        }
+        if ( !is_null ( $method) )
+            return $this->$method ( $params );
         else
         {
-            return $this->productsListView (); //Группа (список товаров) с подбором по х-кам
+            $alterAction = current ( $this->path );
+            if ( $alterAction['type'] == 'alterPage' )
+                return $this->$alterAction['method'] ();
+
+            $action = end ( $this->path );
+            if ( empty ( $this->path ) )
+                return $this->mainPageView (); //Главная каталога
+            elseif ( $action['type'] == 'product' )
+                return $this->productCardView (); //Товар
+            else
+                return $this->productsListView (); //Группа (список товаров) с подбором по х-кам
         }
+    }
+
+    public function beforeRender ()
+    {
+        if ( parent::beforeRender() )
+        {
+            $assets = DS . SITE . DS . Starter::app()->getTheme() . DS . "assets";
+            Starter::app ()->headManager->addJs ( $assets . "/js/catalog.js" );
+            return true;
+        }
+        else
+            return false;
+
     }
 
     /**
@@ -418,12 +367,12 @@ class Catalog extends CmsModule
      */
     private function mainPageView ()
     {
-        //seo$this->seo ( 'content', $this->currentDocument->id, 'Contenseot' );
+        $this->template = "mainpage";
+        $this->model = "Topic";
         $categories = $this->getCatalogTree ( is_null( $this->topic ) ? null : $this->topic->id );
-        $categoriesHtml = TemplateEngine::view ( "subcategories", array ( "categoriesTree" => $categories ), __CLASS__, true );
-        //$tagH1 = !empty ( $this->seo['tagH1'] ) ? $this->seo['tagH1'] : $this->currentDocument->title;
-
-        return TemplateEngine::view ( 'mainpage', array ( 'name' => $tagH1, 'tagH1' => $tagH1, "subCategories" => $categoriesHtml ), __CLASS__ );
+        $topicsIds = ArrayTools::pluck ( $categories->subCategories, "id" );
+        $products = $this->findProducts ( [ "top" => $topicsIds, 'show' => 'Y', 'delete' => 'N' ] );
+        return $this->render ( "subcategories", [ "categoriesTree" => $categories, "products" => $products ] );
     }
 
     /**
@@ -432,7 +381,8 @@ class Catalog extends CmsModule
      */
     private function productCardView ()
     {
-        $this->seo ( 'products', $this->product->id );
+        $this->template = "one";
+        $this->model = "Catalog";
         if ( isset ( $_SESSION['seen'][$this->product->id] ) )
         {
             SqlTools::execute ( "UPDATE `prefix_products` SET `rate`=`rate` + 1 WHERE `id`=" . $this->product->id );
@@ -440,9 +390,7 @@ class Catalog extends CmsModule
         }
 
         if ( !isset ( $_SESSION['seen'] ) )
-        {
             $_SESSION['seen'] = array ();
-        }
         $_SESSION['seen'][$this->product->id] = true;
 
         $product = $this->product;
@@ -457,17 +405,22 @@ class Catalog extends CmsModule
                 $files[] = $filesH;
             }
         }
-
-        $tagH1 = !empty ( $this->seo['tagH1'] ) ? $this->seo['tagH1'] : $product->name;
-
-        $productCardHtml = TemplateEngine::view ( "productCard", array ( "product" => $product, "tagH1" => $tagH1 ), __CLASS__ );
-
-        return TemplateEngine::view ( 'one', array
-        (
-            'productHtml' => $productCardHtml,
-            'files' => $files,
-            'show_comments' => Tools::getSettings ( __CLASS__, 'comments', 'N' ) == 'Y' ? true : false
-        ), __CLASS__ );
+        $parent = ArrayTools::head($this->findCategories(["id"=>$this->parentCategories]));
+//        Подобная продукция КофеПресс
+//        $similar = $this->findProducts( ["top"=>$product->top, 'show'=>'Y', 'deleted'=>'N'], "p.id!=$product->id" );
+//        $count = count ($similar);
+//        $newSim = [];
+//        $i = 0;
+//        while ( $i < 3 )
+//        {
+//            $key = rand(0,$count-1);
+//            if (!array_key_exists ($key,$newSim))
+//            {
+//                $newSim[$key] = $similar[$key];
+//                $i++;
+//            }
+//        }
+        return $this->render ("productCard", array ( "product" => $product, "parent" => $parent/*, 'similar' => $newSim*/ ));
     }
 
     /**
@@ -476,12 +429,13 @@ class Catalog extends CmsModule
      */
     private function productsListView ()
     {
+        /* Хакнем не по децки для кофе*/
+        return $this->completeSubInfo ( [ $this->topic->id ] );
+        $this->template = "list";
+        $this->model = "Topic";
+        $this->title = $this->topic->title;
         if ( $this->topic )
-        {
             $categoryId = $this->topic->id;
-            $this->seo ( 'products_topics', $categoryId );
-            $pageTitle = $this->seo["title"] ? : $this->topic->name;
-        }
         else
         {
             $categoryId = 0;
@@ -491,29 +445,106 @@ class Catalog extends CmsModule
 
         $products = $this->getProductsItems ();
         if ( $this->topic->isModel == "Y" )
-        {
-            $productsHtml = $this->modelView ( $products );
-        }
+            $template = 'modelCard';
         else
         {
             $models = $this->getModelsItems ();
-            $items = array_merge ( $models, $products );
-            $productsHtml = $this->productsItemsView ( $items );
+            $products = array_merge ( $models, $products );
+
+            /* Эту хрень убрать в виджет */
+            $productsPerPage = Tools::getSettings ( __CLASS__, 'onpage', 27 );
+            $pagerLength = Tools::getSettings ( __CLASS__, 'show_pages', 5 );
+            $processedPage = Paging ( $products, $productsPerPage, $pagerLength );
+            $productsOnPage = $processedPage['items'];
+            $paging = $processedPage['rendered'];
+            $this->pager = $paging;
+            /* Эту хрень убрать в виджет */
+
+            $template = "productsItems";$//productsHtml = $this->productsItemsView ( $items );
+            $productIds = ArrayTools::pluck ( $products, "id" );
+            Starter::app ()->imager->getMainImages ( 'Catalog', $productIds );
+            $link = $this->Link ( $this->topic->id );
         }
         $categoriesTree = $this->getCatalogTree ( $categoryId );
+
+        $params =
+        [
+            "isFilter" => $this->isFilter,
+            'name' => $pageTitle,
+            'link' => $link,
+            'exist' => $this->productsFilter['exist'],
+            'paging' => $paging,
+            'products' => $productsOnPage,
+            'isProducts' => count ( $this->products ),
+            'currentCategory' => $categoriesTree,
+        ];
+
+        return $this->render ( $template, $params );
+
         $categoryHtml = TemplateEngine::view ( "subcategories", array ( "categoriesTree" => $categoriesTree ), __CLASS__, true );
-        $tagH1 = !empty ( $this->seo['tagH1'] ) ? $this->seo['tagH1'] : ( $this->topic ? $this->topic->name : $this->actions["filter"]["name"] );
+
+
+
+
 
         return TemplateEngine::view ( 'list', array
         (
             "tagH1" => $tagH1,
-            "isFilter" => $this->isFilter,
-            'name' => $pageTitle,
+
+
             'productsItems' => $productsHtml,
-            'isProducts' => count ( $this->products ),
-            'currentCategory' => $categoriesTree,
+
             "categoryHtml" => $categoryHtml
         ), __CLASS__ );
+    }
+
+    private function completeSubInfo ( $parent )
+    {
+        $this->template = "mainpage";
+        $this->model = "Topic";
+
+        $parent = $parent ? current ( $parent ) : $this->topic->id;
+        $searchParams = [ "show" => "Y", "deleted" => "N" ];
+        if ( is_numeric ( $parent ) )
+            $searchParams['id'] = $parent;
+        else
+            $searchParams['nav'] = $parent;
+
+        $category = ArrayTools::head ( $this->findCategories ( $searchParams ) );
+        $this->topic = $category;
+        $this->title = $this->topic->title;
+        $this->currentCategoryId = $category->id;
+        $this->getChildCategories ();
+        if ( count ( $this->childCategories ) )
+        {
+            $products = $this->findProducts ( [ "show" => "Y", "deleted" => "N", "top" => $this->childCategories ] );
+            $categories = $this->findCategories ( [ "show" => "Y", "deleted" => "N", "id" => $this->childCategories ] );
+        }
+        else
+        {
+            $products = [];
+            $categories = [];
+        }
+
+        return $this->render ( 'subInfo', [ "categories" => $categories, 'products' => $products ] );
+    }
+
+    private function searchSubInfo ()
+    {
+        $this->template = "mainpage";
+        $this->model = "Topic";
+
+        $searchParams = [ "show" => "Y", "deleted" => "N" ];
+        $string = Starter::app ()->urlManager->getParameter ('searchString', '');
+        $searchParams['search'] = $string;
+
+        $products = $this->findProducts ( $searchParams );
+        $categories = ArrayTools::index( ArrayTools::pluck($products, "topic"), "id" );
+        $this->title = "Поиск";
+//        if ( $categoriesIds )
+//            $products = $this->findProducts ( [ "show" => "Y", "deleted" => "N", "top" => $categoriesIds ] );
+
+        return $this->render ( 'subInfo', [ "categories" => $categories, 'products' => $products ] );
     }
 
     private function modelView ( $products )
@@ -533,23 +564,17 @@ class Catalog extends CmsModule
         {
             $sortField = '`' . $this->sorting['field'] . '`';
             if ( $this->sorting['field'] == 'price' )
-            {
                 $sortField = '(`price` * (1 - `discount` / 100))';
-            }
 
             $params['orderBy'] = "`is_exist`, $sortField " . $this->sorting['direction'];
         }
         else
-        {
             $params['orderBy'] = "`order` ASC, `rate` DESC";
-        }
 
         $isFilter = filter_input ( INPUT_POST, "isFilter", FILTER_SANITIZE_NUMBER_INT ) || array_key_exists ( "productsFilter", $_SESSION );
         $isChangedCategory = $this->currentCategoryId && array_key_exists ( "currentCategory", $_SESSION ) && $_SESSION['currentCategory'] != $this->currentCategoryId;
         if ( $isChangedCategory )
-        {
             $this->clearSearchParams ();
-        }
 
         $search = $this->search ();
 
@@ -558,9 +583,7 @@ class Catalog extends CmsModule
         {
             $isClear = filter_input ( INPUT_POST, "isClear", FILTER_SANITIZE_NUMBER_INT );
             if ( $isClear )
-            {
                 $this->clearSearchParams ();
-            }
             else
             {
                 $productsFilter = $this->getFilterParamsFromPost ();
@@ -580,13 +603,9 @@ class Catalog extends CmsModule
         }
 
         if ( $isFilter && $this->isFilter )
-        {
             $cats = $this->currentCategoryId ? array_merge ( $this->childCategories, array ( $this->currentCategoryId ) ) : null;
-        }
         else
-        {
             $cats = $this->currentCategoryId ? array ( $this->currentCategoryId ) : null;
-        }
 
         $this->getTaggedFeatures ();
         $productFilter = $this->fitFilterToCategory ( $this->topic->id );
@@ -606,9 +625,7 @@ class Catalog extends CmsModule
         }
 
         if ( $cats )
-        {
             $params["top"] = $cats;
-        }
 
         $products = $this->findProducts ( $params, $search, "id" );
 
@@ -680,9 +697,7 @@ class Catalog extends CmsModule
                 ORDER BY `order` LIMIT 3";
             $options = SqlTools::selectRows ( $query, MYSQL_ASSOC, 'type' );
             if ( count ( $options ) == 0 )
-            {
                 throw new Exception ( "Таблица сортировки пуста.", 1 );
-            }
             $types = array
                 (
                 'name' => array ( 'type' => 'name', 'name' => 'Сортировка по наименованию', 'substitute' => 'названию' ),
@@ -712,11 +727,11 @@ class Catalog extends CmsModule
             $defaultSort[$sort_type]['current'] = true;
             $defaultSort[$sort_type]['direction'] = $sort_direct;
 
-            $options = array_merge ( $defaultSort, array
-                (
+            $options = array_merge ( $defaultSort,
+            [
                 'name' => array ( 'name' => 'названию', 'current' => false, 'direction' => 'ASC' ),
                 'price' => array ( 'name' => 'цене', 'current' => false, 'direction' => 'ASC' ),
-                ) );
+            ] );
         }
 
         //Проставляем ссылки
@@ -724,13 +739,9 @@ class Catalog extends CmsModule
         {
             $direction = $sorting['direction'];
             if ( $sorting['current'] )
-            {
                 $options[$field]['link'] = $urlManager->createRequestParameters ( array ( 'page' => false, 'order' => $field, 'orderd' => $direction == 'ASC' ? 'DESC' : 'ASC' ) );
-            }
             else
-            {
                 $options[$field]['link'] = $urlManager->createRequestParameters ( array ( 'page' => false, 'order' => $field, 'orderd' => $direction ) );
-            }
         }
 
         //Переопределения
@@ -751,9 +762,7 @@ class Catalog extends CmsModule
                         $options[$field]['link'] = $urlManager->createRequestParameters ( array ( 'page' => false, 'order' => $field, 'orderd' => ($orderDirection == 'ASC' ? 'DESC' : 'ASC') ) );
                     }
                     else
-                    {
                         $options[$field]['current'] = false;
-                    }
                 }
             }
         }
@@ -769,9 +778,7 @@ class Catalog extends CmsModule
                     $options[$field]['link'] = $urlManager->createRequestParameters ( array ( 'page' => false, 'order' => $field, 'orderd' => ($direction == 'ASC' ? 'DESC' : 'ASC') ) );
                 }
                 else
-                {
                     $options[$field]['current'] = false;
-                }
             }
         }
         $this->sorting = array ();
@@ -933,6 +940,9 @@ class Catalog extends CmsModule
                     case "text":
                         $conditions[] = "p.`text` LIKE '%" . SqlTools::escapeString ( $value ) . "%'";
                         break;
+                    case "search":
+                        $conditions[] = "p.`name` LIKE '%" . SqlTools::escapeString ( $value ) . "%'";
+                        break;
                     case "action":
                         $fieldValue = $value == "Y" || $value == "N" ? $value : 'N';
                         $conditions[] = "p.`is_action`='$fieldValue'";
@@ -982,22 +992,13 @@ class Catalog extends CmsModule
             $orderClause = count ( $orderBy ) ? "ORDER BY " . implode ( ", ", $orderBy ) : "";
         }
 
-        $regionField = '';
-        $join = '';
-//        if ( _REGION !== null )
-//        {
-//            $regionField .= ', r.`id` AS `region`';
-//            $join .= " LEFT JOIN `prefix_module_to_region` AS m2r ON (p.`id` = m2r.`module_id` AND m2r.`module` = '" . __CLASS__ . "')"
-//                . " LEFT JOIN `prefix_regions` AS r ON (m2r.`region_id` = r.`id`)";
-//            $whereClause .= " AND (r.`id` IS NULL OR (r.`id` = '" . _REGION . "' AND r.`show` = 'Y' AND r.`deleted` = 'N'))";
-//        }
-
         $query = "
             SELECT
                 p.`id` AS id,
                 p.`top` AS top,
                 p.`order` AS 'order',
                 p.`name` AS name,
+                p.`name` AS title,
                 p.`shortName` AS shortName,
                 p.`nav` AS nav,
                 p.`brand` AS brandId,
@@ -1022,12 +1023,10 @@ class Catalog extends CmsModule
                 p.`rate` AS rate,
                 p.`discount` AS discount,
                 p.`noIndex` AS noIndex
-                $regionField
             FROM `prefix_products` AS p
             LEFT JOIN `prefix_products_topics` AS t ON t.`id`=p.`top`
             LEFT JOIN `prefix_products_brands` AS b ON b.`id`=p.`brand`
             LEFT JOIN `prefix_products_currencies` c ON c.`id`=p.`currency`
-            $join
             $whereClause
             $orderClause
             $limit";
@@ -1084,9 +1083,7 @@ class Catalog extends CmsModule
     public function findCategories ( $params = null )
     {
         if ( !$params )
-        {
             return array ();
-        }
 
         $conditions = array ();
         $orderBy = array ();
@@ -1110,7 +1107,7 @@ class Catalog extends CmsModule
                     $conditions[] = "t.`name` LIKE '%" . SqlTools::escapeString ( $value ) . "%'";
                     break;
                 case "nav":
-                    $conditions[] = "t.`nave` IN (" . ArrayTools::stringList ( $value ) . ")";
+                    $conditions[] = "t.`nav` IN (" . ArrayTools::stringList ( $value ) . ")";
                     break;
                 case "show":
                     $fieldValue = $value == "Y" || $value == "N" ? $value : 'N';
@@ -1156,6 +1153,7 @@ class Catalog extends CmsModule
                 t.`top` AS parentId,
                 t.`order` AS 'order',
                 t.`name` AS name,
+                t.`name` AS title,
                 t.`nav` AS nav,
                 t.`show` AS view,
                 t.`deleted` AS deleted,
@@ -1174,9 +1172,7 @@ class Catalog extends CmsModule
             ";
         $categories = SqlTools::selectObjects ( $query, null, "id" );
         if ( !count ( $categories ) )
-        {
-            return array ();
-        }
+            return [];
 
         $ids = ArrayTools::numberList ( ArrayTools::pluck ( $categories, "id" ) );
         $productsInCategory = SqlTools::selectObjects ( "SELECT `top`, count(`top`) AS `count` FROM `prefix_products` WHERE `top` IN ($ids) AND `deleted`='N' AND `show`='Y' GROUP BY `top`", null, "top" );
@@ -1276,9 +1272,7 @@ class Catalog extends CmsModule
         );
 
         if ( $modelExclude )
-        {
             $params["isModel"] = 'N';
-        }
 
         $categories = $this->findCategories ( $params );
 
@@ -1286,27 +1280,21 @@ class Catalog extends CmsModule
         foreach ( $categories as $category )
         {
             if ( empty ( $category->subCategories ) || !count ( $category->subCategories ) )
-            {
                 $category->subCategories = array ();
-            }
 
             if ( $category->parentId == 0 )
-            {
                 $categoriesTree[$category->id] = $category;
-            }
             else
             {
                 if ( !array_key_exists ( $category->parentId, $categories ) )
-                {
                     continue;
-                }
 
                 $parentCategory = $categories[$category->parentId];
                 $parentCategory->subCategories[$category->id] = $category;
             }
         }
 
-        if ( $id && is_numeric ( $id ) )
+        if ( !is_null ( $id ) && is_numeric ( $id ) )
         {
             $returnedTree = array_key_exists ( $id, $categories ) ? $categories[$id] : null;
         }
@@ -1927,6 +1915,11 @@ class Catalog extends CmsModule
             }
         }
         return $this->localCacheLink . $url;
+    }
+
+    public function topRated ($limit=0)
+    {
+        return $this->findProducts(['show'=>'Y', 'deleted'=>'N', "limit"=>$limit, 'orderBy'=>['rate'=>'desc']]);
     }
 
     /**
@@ -3665,7 +3658,7 @@ class Catalog extends CmsModule
             $addGet = array ();
 
             //SEO
-            $this->seo ( 'products_topics', $this->topic->id );
+            //$this->seo ( 'products_topics', $this->topic->id );
             //Запрос
             if ( isset ( $_GET['addGet'] ) )
             {

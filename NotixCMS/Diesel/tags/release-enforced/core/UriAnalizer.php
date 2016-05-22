@@ -224,15 +224,15 @@ class UriAnalizer extends CmsComponent
     }
 
     /**
-     * Проверка корректности пути и составление карты пути docsByPath
+     * <pre>Определение основного модуля и составление карты пути docsByPath</pre>
      *
-     * @param Integer $urinum порядковый номер элемента uri (based 0)
-     * @param Integer $parent
+     * @param Integer $urinum <p>Текущий порядковый номер элемента uri (based 0)</p>
+     * @param Integer $parent <p>Предыдущий порядковый номер элемента uri (при рекурсивном вызове)</p>
      */
-    public function validateURI ( $urinum = 0, $parent = 0 )
+    public function getRoute ( $urinum = 0, $parent = 0 )
     {
         if ( $urinum > ( count ( $this->uriPath ) - 1 ) || !$this->isMatchedUri )
-            return 'content';
+            return 'Content';
 
         $contents = Starter::app ()->content;
         $docsByParent = $contents->docsByParent;
@@ -240,23 +240,26 @@ class UriAnalizer extends CmsComponent
         {
             foreach ( $docsByParent[$parent] as $id => $doc )
             {
-                //Все в порядке, продолжаем
-                $navPath = explode ( "/", $doc->nav . "/" ); //выбираем только 1ю часть URI
+                $navPath = explode ( "/", $doc->nav . "/" );
                 if ( $navPath[0] == $this->uriPath[$urinum] )
                 {
                     $this->docsByPath[] = $doc;
                     $this->linkPath[] = $doc->nav;
 
                     //Обнаружен модуль, дальше не нужно проверять URI
-                    if ( !empty ( $doc->module ) )
-                        return 'module';
+                    if ( !empty ( $doc->module ) && $doc->module !== "Content" )
+                        return $doc->module;
 
-                    return $this->validateURI ( $urinum + 1, $id );
+                    $subModule = $this->getRoute ( $urinum + 1, $id );
+                    if ( $subModule === false )
+                        return $doc->module;
+                    else
+                        return $subModule;
                 }
             }
-
             return false;
         }
+        return false;
     }
 
     public function getLinkPath ()

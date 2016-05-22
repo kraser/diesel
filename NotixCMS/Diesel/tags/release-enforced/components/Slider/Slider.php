@@ -9,7 +9,7 @@ class Slider extends CmsModule
     private $data;
     public $table = 'slider';
 
-    public function __construct ( $alias, $parent, $config )
+    public function __construct ( $alias, $parent )
     {
         parent::__construct ( $alias, $parent );
         $this->data = Starter::app ()->data;
@@ -17,22 +17,8 @@ class Slider extends CmsModule
 
     public function Run ()
     {
-        $select = '';
-        $join = '';
-        $where = '';
-//        if(_REGION !== null)
-//        {
-//            $select .= ', r.`id` AS `region`';
-//            $join .= " LEFT JOIN `prefix_module_to_region` AS m2r ON (s.`id` = m2r.`module_id` AND m2r.`module` = '" . __CLASS__ . "')"
-//            . " LEFT JOIN `prefix_regions` AS r ON (m2r.`region_id` = r.`id`)";
-//            $where .= " AND (r.`id` IS NULL OR (r.`id` = '" . _REGION . "' AND r.`show` = 'Y' AND r.`deleted` = 'N'))";
-//        }
-
-        $sql = "SELECT s.*" . $select
-        . " FROM `prefix_" . $this->table . "` AS s"
-        . $join
-        . " WHERE s.`deleted` = 'N' AND s.`show` = 'Y'" . $where
-        . "ORDER BY s.`date` DESC";
+        $sql = "SELECT s.*
+            FROM `prefix_" . $this->table . "` AS s WHERE s.`deleted` = 'N' AND s.`show` = 'Y' ORDER BY s.`date` DESC";
         $slides = SqlTools::selectObjects($sql);
         $slideList = array ();
         foreach ( $slides as $slide )

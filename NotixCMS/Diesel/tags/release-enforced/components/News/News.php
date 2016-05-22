@@ -16,6 +16,8 @@ class News extends CmsModule
     {
         parent::__construct ( $alias, $parent );
         $this->data = Starter::app ()->data;
+        $this->template = "page";
+        $this->model = "News";
     }
 
     /** Вывод блока новостей, в зависимости от URI
@@ -25,12 +27,15 @@ class News extends CmsModule
     {
         //RSS
         if ( isset ( $_GET['rss'] ) )
-        {
             $this->RSS ();
-        }
 
         $path = Starter::app ()->urlManager->getUriParts ();
-        array_shift ( $path );
+        $linkPath = Starter::app ()->urlManager->linkPath;
+        $next = array_shift ( $path );
+        while ( in_array ( $next, $linkPath ) )
+        {
+            $next = array_shift ( $path );
+        }
         if ( count ( $path ) === 0 || $path[0] === "list" )
         {
             $this->params = count ( $path ) ? $path : null;
@@ -50,9 +55,7 @@ class News extends CmsModule
     private function actionList ()
     {
         if ( count ( $this->params ) && $this->params[0] == "list" )
-        {
             array_shift ( $this->params );
-        }
 
         $year = count ( $this->params ) ? array_shift ( $this->params ) : null;
         $month = count ( $this->params ) ? array_shift ( $this->params ) : null;
@@ -103,9 +106,7 @@ class News extends CmsModule
             $thisMonth = !$month || $newsDate["month"] == $month;
             $thisDay = !$day || $newsDate["day"] == $day;
             if ( !$thisYear || !$thisMonth || !$thisDay )
-            {
                 continue;
-            }
 
             $newsList[] = array (
                 'name' => $one->name,
@@ -132,11 +133,11 @@ class News extends CmsModule
             'paging' => $paging
         );
         $content = tpl ( 'modules/' . __CLASS__ . '/newslist', $vars );
-        return TemplateEngine::view ( 'news-grid', array (
+        return TemplateEngine::view ( 'page', array (
             'title' => $vars['title'],
             'name' => $vars['title'],
             'paging' => $paging,
-            'text' => $content
+            'content' => $content
             ), __CLASS__ );
     }
 
@@ -149,9 +150,7 @@ class News extends CmsModule
             WHERE n.`id`='" . $this->id . "' AND n.`deleted`='N' AND n.`show`='Y'";
         $news = ArrayTools::head ( SqlTools::selectObjects ( $sql ) );
         if ( empty ( $news ) )
-        {
             page404 ();
-        }
 
         //$this->seo ();
         Starter::app ()->headManager->setTitle ( Starter::app ()->title . " - Новости" . " - " . $news->name );
@@ -167,11 +166,11 @@ class News extends CmsModule
         );
 
         $imager = Starter::app ()->imager;
-        $images = $imager->getImages ( __CLASS__, $this->id );
+        $images = $imager->getImages ( $this->model, $this->id );
 
         $content = TemplateEngine::view ( 'newsone', $vars, __CLASS__ );
-        return TemplateEngine::view ( 'newsone', array (
-            'title'  => isset ( $this->seo['title'] ) && !empty ( $this->seo['title'] ) ? $this->seo['title'] : $vars['title'] . ' — ' . Starter::app ()->title,
+        return $this->render ( 'newsone', array (
+            'title'  => $news->name,
             'name'   => $news->name,
             'date'   => $news->date,
             'text'   => $news->text,
@@ -180,7 +179,7 @@ class News extends CmsModule
             'prev'   => $this->getPage('prev') /* $this->id - 1 == 0 ? '' : $this->id - 1 */ ,
             'docId'  => $this->id
 
-            ), __CLASS__ );
+            ) );
     }
 
     /**
@@ -242,28 +241,18 @@ class News extends CmsModule
         {
             //Keywords
             if ( !empty ( $this->seo['keywords'] ) )
-            {
                 $header->addMetaText ( "<meta name='keywords' content='" . htmlspecialchars ( $this->seo['keywords'] ) . "' />" );
-            }
             //Description
             if ( !empty ( $this->seo['description'] ) )
-            {
                 $header->addMetaText ( "<meta name='description' content='" . htmlspecialchars ( $this->seo['description'] ) . "' />" );
-            }
             //Title
             if ( !empty ( $this->seo['title'] ) )
-            {
                 $this->seo['title'] = $this->seo['title'];
-            }
             else
-            {
                 $this->seo['title'] = Starter::app ()->title . ( $this->currentDocument ? "  — " . $this->currentDocument->title : "" );
-            }
         }
         else
-        {
             $this->seo['title'] = Starter::app ()->title . ( $this->currentDocument ? "  — " . $this->currentDocument->title : "" );
-        }
 
         $header->setTitle ( $this->seo['title'] );
     }
@@ -325,9 +314,7 @@ class News extends CmsModule
             return array ( array ( 'name' => $news['name'], 'link' => $this->Link ( array (), $this->id ) ) );
         }
         elseif ( $this->year != 0 && $this->month != 0 )
-        {
             return array ( array ( 'name' => 'Новости за ' . mb_strtolower ( $this->monthes[$this->month - 1] ) . ' ' . $this->year, 'link' => $this->Link ( $this->year, $this->month ) ) );
-        }
 
         return array ();
     }
@@ -586,9 +573,7 @@ class News extends CmsModule
             $link .= "/list/$year/$month/$day";
         }
         else
-        {
-            $link .= "/" . ( $id == 0 ? '' : $id );
-        }
+            $link .= "/view/" . ( $id == 0 ? '' : $id );
         return $link;
     }
 
@@ -627,9 +612,7 @@ class News extends CmsModule
     function LastNewsBlock ($topic = null, $limit = null)
     {
         if($limit)
-        {
             $count = $limit;
-        }
         else
         {
             $count = Tools::getSettings ( 'News', 'last_news' );

@@ -2,121 +2,95 @@
 
 /**
  * <pre>Класс Basket для работы с корзиной товаров</pre>
- * @todo Убрать deprecated поля в BasketItem
+ *
  */
 class Basket extends CmsModule
 {
-    private $alterPages =
-    [
-        'add' => array ( 'method' => 'StaticAdd', 'name' => 'Добавить в корзину' ),
-        'del' => array ( 'method' => 'StaticDel', 'name' => 'Убрать из корзины' ),
-        'edit' => array ( 'method' => 'StaticEdit', 'name' => 'Редактировать количество' ),
-        'thanks' => array ( 'method' => 'ThanksPage', 'name' => 'Спасибо за заказ!' )
-    ];
     private $basket;
     private $payment;
     private $currentBasketId;
 
-    public function __construct ( $alias, $parent, $config )
+    public function __construct ( $alias, $parent )
     {
         parent::__construct ( $alias, $parent );
-        if ( !session_id () )
-            session_start ();
+        $this->actions =
+        [
+            'default' =>
+            [
+                'method' => 'view'
+            ],
+            'add' =>
+            [
+                'method' => 'addToBasket',
+                'name' => 'Добавить в корзину'
+            ],
+            'edit' =>
+            [
+                'method' => 'editBasket',
+                'name' => 'Редактировать количество'
+            ]
+        ];
 
         $this->payment = new Payment();
+        $this->template = "mainpage";
     }
 
     public function Run ()
     {
-        $alter = $this->checkAlterPage ();
-        if ( !$alter )
-        {
-            if ( !array_key_exists ( "basket", $_SESSION ) )
-                $box = $this->EmptyBasketPage ();
-            elseif ( $this->currentDocument->nav == 'order' )
-                $box = $this->getOrderPage ();
-            else
-                $box = $this->getBasketPage ();
-        }
-        else
-            $box = $alter; //Альтернативные
-
-        if ( is_array ( $box ) )
-        {
-            $name = $box['name'];
-            $text = $box['text'];
-        }
-        else
-        {
-            $name = $this->currentDocument->title;
-            $text = $box;
-        }
-
-        $print = filter_input ( INPUT_GET, "print" );
-        if ( $print )
-            $template = 'basket-light';
-        else
-            $template = 'basket';
-
-        Starter::app ()->headManager->setTitle ( Starter::app ()->title . ' — ' . $this->currentDocument->title );
-        return tpl ( $template,
-        [
-            'name' => $name,
-            'text' => $text
-        ] );
+        $action = $this->createAction ();
+        if ( !$action )
+            page404 ();
+        $content = $action->run ();
+        return $content;
     }
 
-    private function checkAlterPage ()
+    public function startController ( $method, $params )
     {
-        $request = Starter::app ()->urlManager->getUrlPart ( 'path' );
+        return $this->$method ( $params );
+    }
 
-        $mlink = trim ( str_replace ( Starter::app ()->content->getLinkById ( $this->currentDocument->id ), '', $request ) );
-        $mpath = array_filter ( explode ( '/', $mlink ) );
+    private function view ()
+    {
+        $clean = Starter::app()->urlManager->getParameter ( 'clean', 0 );
+        if ( $clean )
+            $this->setBasketList ( null );
 
-        //@todo посмотреть аналоги кода в других модулях и перенести в родительский объект
-        $checkAlter = current ( $mpath );
-        if ( isset ( $this->alterPages[$checkAlter] ) )
-        {
-            // todo заменить вызов 404 на выброс исключения
-            if ( !method_exists ( $this, $this->alterPages[$checkAlter]['method'] ) )
-                page404 ();
+        $basket = $this->getBasketList ();
 
-            $params_path = [];
-            $params_path[] =
-            [
-            'type' => 'alter_page',
-            'method' => $this->alterPages[$checkAlter]['method'],
-            'data' => $checkAlter
-            ];
+        return $this->render ( 'list' , [ 'basket' => $basket ] );
+    }
 
-            $skipFirst = false;
-            foreach ( $mpath as $ppath )
-            {
-                if ( !$skipFirst )
-                {
-                    $skipFirst = true;
-                    continue;
-                }
-                $params_path[] =
-                [
-                    'type' => 'param',
-                    'data' => $ppath
-                ];
-            }
-            $this->path = $params_path;
-        }
+    /**
+     * <pre>Добавление товара в корзину через AJAX запросы</pre>
+     */
+    private function addToBasket ()
+    {
+        $id = filter_input ( INPUT_POST, "id", FILTER_SANITIZE_NUMBER_INT );
+        $toAdd = filter_input ( INPUT_POST, "quantity", FILTER_SANITIZE_NUMBER_INT );
+        $featureId = filter_input ( INPUT_POST, "featureId", FILTER_SANITIZE_NUMBER_INT );
+        $featureValue = filter_input ( INPUT_POST, "featureValues" );
+        $basketId = filter_input ( INPUT_POST, "basketId", FILTER_SANITIZE_STRING );
 
-        if ( !empty ( $mlink ) && empty ( $this->path ) )
-            page404 ();
+        $quantity = intval ( $toAdd ) ? : 1;
+        $error = true;
+        if ( $id )
+            $result = $this->actionAdd ( $id, $quantity, $basketId, $featureId, $featureValue );
 
-        if ( empty ( $this->path ) )
-            return false;
-        $alterPage = current ( $this->path );
+        $html = $this->renderMinicart ();
+        return json_encode (
+        [
+            'basket' => $basket,
+            'html' => $html,
+            'totalFormated' => priceFormat ( $basket->total ),
+            'countFormatted' => $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ),
+            'error' => $error XOR $result,
+        ]);
+    }
 
-        if ( $alterPage['type'] == 'alter_page' )
-            return $this->$alterPage['method'] (); //Вызов альтернативного метода
-        else
-            return false;
+    public function renderMinicart ()
+    {
+        $basket = $this->getBasketList ();
+        return $this->renderPart ( 'minibasket', [ 'basket' => $basket ] );
     }
 
     /**
@@ -128,7 +102,7 @@ class Basket extends CmsModule
      * @param type $featureValue
      * @return boolean <p>true -успешное добавление / false - товар не добавлен</p>
      */
-    private function AddToBasket ( $id, $count = 1, $basketId = null, $featureId = null, $featureValue = null )
+    private function actionAdd ( $id, $count = 1, $basketId = null, $featureId = null, $featureValue = null )
     {
         $success = true;
         $id = abs ( ( int ) $id );
@@ -184,7 +158,6 @@ class Basket extends CmsModule
             $basket->products[$basketId] = $basketItem;
         }
 
-
         $basket->count += $count;
         $basket->total += $count * $basketItem->price;
 
@@ -196,37 +169,29 @@ class Basket extends CmsModule
         return $success;
     }
 
-    /**
-     * <pre>Добавление товара в корзину через AJAX запросы</pre>
-     */
-    public function Add ()
+    private function editBasket ()
     {
-        $id = filter_input ( INPUT_POST, "id", FILTER_SANITIZE_NUMBER_INT );
-        $toAdd = filter_input ( INPUT_POST, "quantity", FILTER_SANITIZE_NUMBER_INT );
-        $featureId = filter_input ( INPUT_POST, "featureId", FILTER_SANITIZE_NUMBER_INT );
-        $featureValue = filter_input ( INPUT_POST, "featureValues" );
+        $count = filter_input ( INPUT_POST, "quantity", FILTER_SANITIZE_NUMBER_INT );
         $basketId = filter_input ( INPUT_POST, "basketId", FILTER_SANITIZE_STRING );
-
-        $quantity = intval ( $toAdd ) ? : 1;
+        
         $error = true;
-        if ( $id )
-            $result = $this->AddToBasket ( $id, $quantity, $basketId, $featureId, $featureValue );
+        if ( isset ( $basketId ) && $count > 0 )
+            $result = $this->actionEditBasket ( $basketId, $count );
+        else if ( isset ( $basketId ) && $count <= 0 )
+            $result = $this->delFromBasket ( $basketId );
+        else
+            return [ "error" => $error ];
 
-        $format = filter_input ( INPUT_POST, "format", FILTER_SANITIZE_STRING );
         $basket = $this->getBasketList ();
-        $basket->html = $this->Block ();
-
-        $items = ArrayTools::select ( $basket->products, "productId", $id );
-        $catalog = Starter::app ()->getModule ( 'Catalog' );
-        return
+        $html = $this->renderMinicart ();
+        return json_encode (
         [
             'basket' => $basket,
+            'html' => $html,
             'totalFormated' => priceFormat ( $basket->total ),
             'countFormatted' => $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ),
-            'basketId' => $this->currentBasketId,
-            'buybutton' => $catalog->BuyButton ( $id, $format ),
             'error' => $error XOR $result,
-        ];
+        ]);
     }
 
     /**
@@ -234,7 +199,7 @@ class Basket extends CmsModule
      * @param Integer $id <p>Id позиции в корзине</p>
      * @return Boolean <p>true - удаление успешно / false - удаление неуспешно</p>
      */
-    private function DelFromBasket ( $id )
+    private function delFromBasket ( $id )
     {
         $basket = $this->getBasketList ();
         if ( $basket and array_key_exists ( $id, $basket->products ) )
@@ -246,6 +211,105 @@ class Basket extends CmsModule
         else
             return false;
     }
+
+    private function actionEditBasket ( $id, $count )
+    {
+        $success = true;
+        $basket = $this->getBasketList ();
+        $count = abs ( ( int ) $count );
+
+        if ( $basket && array_key_exists ( $id, $basket->products ) )
+        {
+            $basket->products[$id]->quantity = $count;
+            $this->basket = $basket;
+            $this->currentBasketId = $id;
+            $this->setBasketList ( $basket );
+            return $success;
+        }
+        else
+            return !$success;
+    }
+
+    /**
+     * <pre>Возвращает объект с информацией о текущес состоянии корзины:
+     * список позиций, находящихся в корзине
+     * суммарная стоимость корзины
+     * кол-во мест в корзине</pre>
+     * @return BasketList|null
+     */
+    public function getBasketList ()
+    {
+        if ( empty ( $_SESSION['basket'] ) )
+            return null;
+
+        $basket = unserialize ( $_SESSION['basket'] );
+        $totals = 0;
+        $count = 0;
+        $items = ArrayTools::pluck ( $basket->products, "productId" );
+        $productsId = ArrayTools::numberList ( $items );
+        $images = Starter::app ()->imager->getMainImages ( "Catalog", $items );
+        if ( $productsId )
+            $names = SqlTools::selectObjects ( "SELECT `id`, `name`, `top` FROM `prefix_products` WHERE `id` IN ($productsId)", null, "id" );
+        foreach ( $basket->products as $basketItem )
+        {
+            $basketItem->name = $names[$basketItem->productId]->name;
+            $basketItem->top = $names[$basketItem->productId]->top;
+            $basketItem->image = $images[$basketItem->productId];
+            $count += $basketItem->quantity;
+            $basketItem->total = $basketItem->price * $basketItem->quantity;
+            $totals += $basketItem->total;
+        }
+
+        $basket->total = $totals;
+        $basket->count = $count;
+
+        return $basket;
+    }
+
+    /**
+     * <pre>Записывает объект с информацией о текущес состоянии корзины:
+     * список позиций, находящихся в корзине
+     * суммарная стоимость корзины
+     * кол-во мест в корзине</pre>
+     * @return void
+     */
+    public function setBasketList ( BasketList $basket = null )
+    {
+        if ( (!$basket ) )
+        {
+            unset ( $_SESSION['basket'] );
+            return;
+        }
+
+        $totals = 0;
+        $count = 0;
+        foreach ( $basket->products as $basketItem )
+        {
+            $count += $basketItem->quantity;
+            $basketItem->total = $basketItem->price * $basketItem->quantity;
+            $totals += $basketItem->total;
+        }
+
+        $basket->total = $totals;
+        $basket->count = $count;
+
+        $_SESSION['basket'] = serialize ( $basket );
+    }
+
+    /**
+     * Очищает корзину
+     */
+    public function clearBasket ()
+    {
+        $this->setBasketList ( null );
+
+        return [ 'block' => $this->Block (), 'error' => false, 'html' => $this->EmptyBasketPage () ];
+    }
+
+    /*------- Дальше муйня ------------------*/
+
+
+
 
     /**
      * Удаление из корзины по ссылке (не аякс)
@@ -291,64 +355,9 @@ class Basket extends CmsModule
         ];
     }
 
-    private function EditCountBasket ( $id, $count )
-    {
-        $success = true;
-        $basket = $this->getBasketList ();
-        $count = abs ( ( int ) $count );
 
-        if ( $basket && array_key_exists ( $id, $basket->products ) )
-        {
-            $basket->products[$id]->quantity = $count;
-            $this->basket = $basket;
-            $this->currentBasketId = $id;
-            $this->setBasketList ( $basket );
-            return $success;
-        }
-        else
-            return !$success;
-    }
 
-    public function Edit ()
-    {
-        $id = filter_input ( INPUT_POST, "id", FILTER_SANITIZE_NUMBER_INT );
-        $count = filter_input ( INPUT_POST, "quantity", FILTER_SANITIZE_NUMBER_INT );
-        $basketId = filter_input ( INPUT_POST, "basketId", FILTER_SANITIZE_STRING );
-        $format = filter_input ( INPUT_POST, "format", FILTER_SANITIZE_STRING );
 
-        $error = true;
-        if ( isset ( $basketId ) && $count > 0 )
-            $result = $this->EditCountBasket ( $basketId, $count );
-        else if ( isset ( $basketId ) && $count <= 0 )
-            $result = $this->DelFromBasket ( $basketId );
-        else
-            return [ "error" => $error ];
-
-        $catalog = Starter::app ()->getModule ( 'Catalog' );
-        $basket = $this->getBasketList ();
-        $basket->html = $this->Block ();
-
-        $empty = (!$basket->total && !$basket->count);
-        if ( $empty )
-            $html = $this->EmptyBasketPage ();
-
-        $item = new stdClass();
-        $item->total = priceFormat ( $basket->products[$basketId]->total );
-        $item->quantity = $count;
-
-        return
-        [
-            'basket' => $basket,
-            'totalFormated' => priceFormat ( $basket->total ),
-            'countFormated' => $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ),
-            'currentItem' => $item,
-            'basketId' => $this->currentBasketId,
-            'buybutton' => $catalog->BuyButton ( $id, $format ),
-            'error' => $error XOR $result,
-            'empty' => $empty,
-            'html' => $empty ? $html : "",
-        ];
-    }
 
     public function editComment ()
     {
@@ -431,78 +440,7 @@ class Basket extends CmsModule
         return tpl ( 'modules/' . __CLASS__ . '/block', [ 'basket' => $this->getBasketList () ] );
     }
 
-    /**
-     * <pre>Возвращает объект с информацией о текущес состоянии корзины:
-     * список позиций, находящихся в корзине
-     * суммарная стоимость корзины
-     * кол-во мест в корзине</pre>
-     * @return BasketList|null
-     */
-    public function getBasketList ()
-    {
-        if ( empty ( $_SESSION['basket'] ) )
-            return null;
 
-        $basket = unserialize ( $_SESSION['basket'] );
-        $totals = 0;
-        $count = 0;
-        $productsId = ArrayTools::numberList ( ArrayTools::pluck ( $basket->products, "productId" ) );
-        if ( $productsId )
-            $names = SqlTools::selectObjects ( "SELECT `id`, `name`, `top` FROM `prefix_products` WHERE `id` IN ($productsId)", null, "id" );
-        foreach ( $basket->products as $basketItem )
-        {
-            $basketItem->name = $names[$basketItem->productId]->name;
-            $basketItem->top = $names[$basketItem->productId]->top;
-            $count += $basketItem->quantity;
-            $basketItem->total = $basketItem->price * $basketItem->quantity;
-            $totals += $basketItem->total;
-        }
-
-        $basket->total = $totals;
-        $basket->count = $count;
-
-        return $basket;
-    }
-
-    /**
-     * <pre>Записывает объект с информацией о текущес состоянии корзины:
-     * список позиций, находящихся в корзине
-     * суммарная стоимость корзины
-     * кол-во мест в корзине</pre>
-     * @return void
-     */
-    public function setBasketList ( BasketList $basket = null )
-    {
-        if ( (!$basket ) )
-        {
-            unset ( $_SESSION['basket'] );
-            return;
-        }
-
-        $totals = 0;
-        $count = 0;
-        foreach ( $basket->products as $basketItem )
-        {
-            $count += $basketItem->quantity;
-            $basketItem->total = $basketItem->price * $basketItem->quantity;
-            $totals += $basketItem->total;
-        }
-
-        $basket->total = $totals;
-        $basket->count = $count;
-
-        $_SESSION['basket'] = serialize ( $basket );
-    }
-
-    /**
-     * Очищает корзину
-     */
-    public function clearBasket ()
-    {
-        $this->setBasketList ( null );
-
-        return [ 'block' => $this->Block (), 'error' => false, 'html' => $this->EmptyBasketPage () ];
-    }
 
     /**
      *
@@ -630,6 +568,11 @@ class BasketItem
      * @var Integer
      */
     public $top;
+    /**
+     * <p>Изображение товара</p>
+     * @var Array
+     */
+    public $image;
     /**
      * <p>Ассоциативный массив дополнительных параметров</p>
      * @var Array

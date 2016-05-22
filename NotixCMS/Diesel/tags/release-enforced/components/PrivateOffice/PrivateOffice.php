@@ -1,8 +1,7 @@
 <?php
 
-class PrivateOffice extends Component
+class PrivateOffice extends CmsModule
 {
-    private static $instance;
     protected $user;
     protected $orders;
     protected $payments;
@@ -12,7 +11,6 @@ class PrivateOffice extends Component
      * @var String
      */
     protected $serviceEntry;
-    private $actions;
     protected $mainTab;
     protected $tabs;
     protected $services;
@@ -25,11 +23,13 @@ class PrivateOffice extends Component
         parent::__construct ( $alias, $parent );
     	$this->serviceEntry = Tools::getSettings("Office", "easyEntry", 'Y') == 'Y' ? PrivateOffice::EASY : PrivateOffice::LOGIN;
         $this->mainTab = array ( "alias" => "user", "tabName" => "Пользователь" );
+        $this->template = "mainpage";
         $this->actions = array
         (
+            'default' => [ 'method' => 'indexAction' ],
             'login' => array ( 'method' => 'authorize', 'name' => 'Авторизация' ),
             "registration" => array ( "method" => "registration", 'name' => 'Регистрация' ),
-            'createOrder' => array ( 'method' => 'createOrder'),
+            'checkout' => array ( 'method' => 'createOrder'),
             'paymentResult' => array ( 'method' => 'paymentResult', 'name' => 'Оповещение об оплате' ),
             'paymentSuccess' => array ( 'method' => 'paymentSuccess', 'name' => 'Успешная оплата' ),
             'paymentFail' => array ( 'method' => 'paymentFail', 'name' => 'Отказ от оплаты' ),
@@ -38,27 +38,42 @@ class PrivateOffice extends Component
             'remind' => array ( 'method' => 'remind'),
             'restore' => array ( 'method' => 'restore')
         );
-        $this->tabs = array
-        (
-            "order" => array ( "alias" => "order", "tabName" => "Заказы" )/*,
-            "cold" => array ( "alias" => "cold", "tabName" => "Холодная вода" ),
-            "electro" => array ( "alias" => "electro", "tabName" => "Электричество" )*/
-        );
-        $this->services = array
-        (
-            "user" => new Users (),
-            "order" => new Order ()/*,
-            "cold" => new ConsumptionManager("cold"),
-            "electro" => new ConsumptionManager("electro")*/
-        );
+//        $this->tabs = array
+//        (
+//            "order" => array ( "alias" => "order", "tabName" => "Заказы" )/*,
+//            "cold" => array ( "alias" => "cold", "tabName" => "Холодная вода" ),
+//            "electro" => array ( "alias" => "electro", "tabName" => "Электричество" )*/
+//        );
+//        $this->services = array
+//        (
+//            "user" => new Users (),
+//            "order" => new Order ()/*,
+//            "cold" => new ConsumptionManager("cold"),
+//            "electro" => new ConsumptionManager("electro")*/
+//        );
+    }
+
+    public function Run ()
+    {
+        $action = $this->createAction ();
+        if ( !$action )
+            page404 ();
+        $content = $action->run ();
+        return $content;
+    }
+
+    public function startController ( $method, $params )
+    {
+        return $this->$method ( $params );
     }
 
     /**
      * <pre>Возвращает страницу личного кабинета</pre>
      * @return String
      */
-    public function Run ()
+    public function _Run ()
     {
+
         $uri = Starter::app ()->urlManager->getUrlPart ( "path" );
         $uriParts = array_filter ( explode ( "/", $uri ) );
         array_shift ( $uriParts );
@@ -68,9 +83,7 @@ class PrivateOffice extends Component
             $method = array_key_exists ( $alias, $this->actions ) ? $this->actions[$alias]['method'] : "indexAction";
         }
         else
-        {
             $method = "indexAction";
-        }
 
         if ( $this->serviceEntry == PrivateOffice::EASY || UserIdentity::getInstance ()->isAuthorized () )
         {
@@ -88,9 +101,7 @@ class PrivateOffice extends Component
     {
         $authorized = UserIdentity::getInstance ()->isAuthorized ();
         if ( !$authorized )
-        {
             return $this->authorize ();
-        }
         else
         {
             $user = UserIdentity::getUser ();
@@ -122,19 +133,14 @@ class PrivateOffice extends Component
     private function authorize ()
     {
         if ( UserIdentity::getInstance ()->isAuthorized () )
-        {
             return $this->indexAction ();
-        }
-        $model['title'] = "Войти в личный кабинет";
-        $model['content'] = TemplateEngine::view ( "loginForm", array
-        (
-            'paymethods' => Starter::app ()->getModule ( "order")->getPayMethods(),
-            //'formId' => 'loginForm',
-            //'fields' => $fields,
-            'action' => Starter::app ()->urlManager->getCurrentUrl ()
-        ), __CLASS__, true );
 
-        return $model;
+        $this->title = "Оформить заказ";
+        return $this->render ( "loginForm",
+        [
+            'paymethods' => Starter::app ()->getModule ( "Order")->getPayMethods(),
+            'action' => Starter::app ()->urlManager->getCurrentUrl ()
+        ] );
     }
 
     private function logout ()
@@ -146,9 +152,7 @@ class PrivateOffice extends Component
     public function registration ()
     {
         if ( UserIdentity::getInstance ()->isAuthorized () )
-        {
             return $this->indexAction ();
-        }
 
         $users = Starter::app ()->getModule ( "Users" );
         $model['title'] = "Регистрация в личном кабинете";
@@ -157,9 +161,7 @@ class PrivateOffice extends Component
 
         $regBox = filter_input ( INPUT_POST, 'regBox', FILTER_SANITIZE_STRING );
         if ( $regBox )
-        {
             $result = $users->createRecord ();
-        }
 
         if ( !$regBox || array_key_exists ( "error", $result ) )
         {
@@ -187,7 +189,26 @@ class PrivateOffice extends Component
 
     public function createOrder ()
     {
-        return array ( 'title' => 'Оформление заказа', 'content' => Starter::app ()->getModule ( "Order" )->createOrder () );
+//        if ( !UserIdentity::getInstance ()->isAuthorized () )
+//            return $this->authorize ();
+//        else
+//        {
+            $this->title = 'Оформление заказа';
+            $orderInfo = Starter::app ()->getModule ( "Order" )->createOrder ();
+            if ( array_key_exists ( 'errors', $orderInfo )  )
+            {
+                return $this->render ( "loginForm",
+                [
+                    'paymethods' => $orderInfo['paymethods'],
+                    'action' => Starter::app ()->urlManager->getCurrentUrl (),
+                    'orderData' => $orderInfo['orderData'],
+                    'errors' => array_key_exists ( 'errors', $orderInfo ) ? $orderInfo['errors'] : []
+                ] );
+            }
+            else
+                return $this->render ( 'orderPayment', $orderInfo );
+
+//        }
     }
 
     public function paymentResult()
@@ -358,9 +379,7 @@ class PrivateOffice extends Component
             $response['html'] = base64_encode ( tpl ( "/parts/shortProfile", array ( "userData" => $this->user->getUserInfo (), "checkout" => true ) ) );
         }
         else
-        {
             $response['error'] = 1;
-        }
 
         sendJSON ( $response );
     }
@@ -402,9 +421,7 @@ class PrivateOffice extends Component
             sendJSON ( $result );
         }
         else
-        {
             echo tpl ( "parts/authBox" );
-        }
     }
 
 

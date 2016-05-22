@@ -1,4 +1,4 @@
-$("#officeTabs").tabs();
+//$("#officeTabs").tabs();
 $("#officeTabs input[type=\'button\']").button();
 $("img[name=\'minifier\']").click(function(){
     var el = $(this);

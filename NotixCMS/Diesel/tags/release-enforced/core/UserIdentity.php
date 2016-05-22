@@ -16,25 +16,17 @@ class UserIdentity
         $userAgent = filter_input ( INPUT_SERVER, 'HTTP_USER_AGENT', FILTER_SANITIZE_STRING );
 
         if ( 'cli' == PHP_SAPI )
-        {
             $this->authorizer = new TerminalAuthorization();
-        }
         else if ( $userAgent && $this->isBrowser ( $userAgent ) )
-        {
             $this->authorizer = new HtmlAuthorization();
-        }
         else
-        {
             $this->authorizer = new HttpAuthorization();
-        }
     }
 
     public static function &getInstance ()
     {
         if ( self::$instance === null )
-        {
             self::$instance = new self();
-        }
 
         return self::$instance;
     }

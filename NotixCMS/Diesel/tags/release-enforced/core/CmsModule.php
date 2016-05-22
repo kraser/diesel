@@ -26,6 +26,10 @@ class CmsModule extends CmsComponent
         parent::init();
         $installer = Starter::app ()->getComponent ( "installer" );
         $installer->Run ();
+        foreach ( Starter::app ()->moduleBehaviors as $name => $behavior )
+        {
+            $this->attachBehavior ( $name, $behavior );
+        }
     }
 
     public function configure ( $config )
@@ -86,6 +90,7 @@ class CmsModule extends CmsComponent
                 else
                     $module = Starter::createComponent ( $config, $this->getId () . '/' . $id, $this );
 
+                $module->init ();
                 $this->module[$id] = $module;
                 return $this->module[$id];
             }
@@ -283,6 +288,17 @@ class CmsModule extends CmsComponent
         return $this->controllerMap;
     }
 
+    private $moduleBehaviors;
+    public function getModuleBehaviors ()
+    {
+        return $this->moduleBehaviors;
+    }
+
+    public function setModuleBehaviors ( $behaviors )
+    {
+        $this->moduleBehaviors = $behaviors;
+    }
+
     /* @todo -- Методы будущего класса CmsController. Это надо будет перенести ----------------------------------------*/
     private $title;
     public function setTitle ( $title )
@@ -385,15 +401,23 @@ class CmsModule extends CmsComponent
 
     public function createAction ()
     {
-        $requestUri = filter_input ( INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_STRING );
-        $request = strpos ( $requestUri, '?' ) !== false ? substr ( $requestUri, 0, strpos ( $requestUri, '?' ) ) : $requestUri;
         if ( !$this->currentDocument->id )
             $actionAlias = 'default';
         else
         {
 
-            $mlink = trim ( str_replace ( Starter::app ()->content->getLinkById ( $this->currentDocument->id ), '', $request ) );
-            $pathStack = array_filter ( explode ( '/', $mlink ) );
+            $pathStack = Starter::app ()->urlManager->getUriParts ();
+            $linkPath = Starter::app ()->urlManager->linkPath;
+            $next = count ( $pathStack ) > 0;//
+            while ( $next )
+            {
+                $current = current ( $pathStack );
+                if ( in_array ( $current, $linkPath ) )
+                    array_shift ( $pathStack );
+                else
+                    $next = false;
+            }
+
             $actionAlias = current ( $pathStack ) ? : 'default';
         }
 
@@ -419,6 +443,9 @@ class CmsModule extends CmsComponent
                 $isValue = false;
             }
         }
+        if ( count ( $pathStack ) > 1 && !array_key_exists ( $name, $data ) )
+            $data[] = $name;
+        
         $action->data = $data;
         return $action;
     }
@@ -437,7 +464,30 @@ class CmsModule extends CmsComponent
 
     public function setActions ( $actions )
     {
-        $this->actions = $actions;
+        $common =
+        [
+            'put' =>
+            [
+                'method' => "putData"
+            ]
+        ];
+        $this->actions = ArrayTools::merge ( $common, $actions );
+    }
+
+    public function putData ( $param )
+    {
+        $dataType = ArrayTools::head ( $param );
+        switch ($dataType)
+        {
+            case "comments":
+                $response = new stdClass ();
+                $response->comment = $this->putComment ();
+                $response->html = $this->renderPart ( "comment", [ 'comment' => $response->comment ] );
+                echo json_encode ( $response );
+                exit ();
+                break;
+            default:
+        }
     }
 
     private $currentModelName;

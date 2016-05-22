@@ -2,8 +2,6 @@
 
 class Content extends CmsModule
 {
-    private $table = 'content';
-
     public function __construct ( $alias, $parent, $config )
     {
         parent::__construct ( $alias, $parent );
@@ -18,8 +16,17 @@ class Content extends CmsModule
             'map' =>
             [
                 'method' => 'siteMap'
+            ],
+            'contacts' =>
+            [
+                'method' => 'contacts'
+            ],
+            'send' =>
+            [
+                'method' => 'sendForm'
             ]
         ];
+        $this->table = 'content';
 
     }
 
@@ -28,8 +35,7 @@ class Content extends CmsModule
         $action = $this->createAction ();
         if ( !$action )
             page404 ();
-        $content = $action->run ();
-        return $content;
+        return $action->run ();
     }
 
     public function startController ( $method, $params )
@@ -37,7 +43,7 @@ class Content extends CmsModule
         if ( $this->currentDocument && array_key_exists ( $this->currentDocument->nav, $this->actions ) )
         {
             $method = $this->actions[$this->currentDocument->nav]['method'];
-            return $text = $this->$method ();
+            return $this->$method ();
         }
         else
             return $this->$method ( $params );
@@ -47,56 +53,29 @@ class Content extends CmsModule
     {
         if ( !$this->currentDocument )
         {
-
-            Starter::app ()->headManager->addMetaText ( Tools::getSettings ( "Content", "customMeta", "" ) );
+            Starter::app ()->headManager->addMetaText ( Tools::getSettings ( "Content", "customMeta", "" ) );//??
             return $this->render ( 'mainpage' );
         }
 
-        $text = $this->currentDocument->html;
         $this->template = ($this->currentDocument->template ? basename ( $this->currentDocument->template, '.php' ) : 'page');
         return $this->render ( 'raw', [ 'content' => $this->currentDocument ] );
-        return TemplateEngine::view ( $this->template, array
-        (
-            'module' => $this,
-            'tagH1' => $tagH1,
-            'name' => $this->currentDocument->title, //deprecated
-            'anons' => $this->currentDocument->anons,
-            'text' => $text,
-            'id' => $this->currentDocument->id,
-        ), __CLASS__, true );
-
-        //$this->render (  );
     }
 
-    function MainMenu ()
+    public function contacts ()
     {
-        $select = '';
-        $join = '';
-        $where = '';
-//        if ( _REGION !== null )
-//        {
-//            $select .= ', r.`id` AS `region`';
-//            $join .= " LEFT JOIN `prefix_module_to_region` AS m2r ON (c.`id` = m2r.`module_id` AND m2r.`module` = '" . __CLASS__ . "')"
-//                . " LEFT JOIN `prefix_regions` AS r ON (m2r.`region_id` = r.`id`)";
-//            $where .= " AND (r.`id` IS NULL OR (r.`id` = '" . _REGION . "' AND r.`show` = 'Y' AND r.`deleted` = 'N'))";
-//        }
+        return $this->render ( "contacts" );
+    }
 
-        $sql = "SELECT c.*" . $select
-            . " FROM `prefix_" . $this->table . "` AS c"
-            . $join
-            . " WHERE c.`deleted` = 'N' AND c.`show` = 'Y'" . $where
-            . " ORDER BY c.`order`, c.`name`";
-
-        $pages = SqlTools::selectRows ( $sql, MYSQL_ASSOC );
-
-        // $pages = Starter::app ()->data->GetData ( $this->table, "AND `show` = 'Y'" );
-
+    public function MainMenu ()
+    {
+        $docs = Starter::app ()->content->docs;
         $menuByTop = array ();
         $menu = array ();
         $activeSet = false;
-        foreach ( $pages as $id => $i )
+        foreach ( $docs as $dox )
         {
-            if ( $i['showmenu'] == 'N' )
+            $i = (array) $dox;
+            if ( $i['showMenu'] == 'N' )
                 continue;
             //Отмечаем текущую страницу
             if ( in_array ( $i['nav'], Starter::app ()->urlManager->linkPath ) )
@@ -107,19 +86,18 @@ class Content extends CmsModule
             else
                 $i['active'] = false;
 
-            $menuByTop[$i['top']][] = $i;
+            $menuByTop[$i['parentId']][] = $i;
         }
-
         if ( empty ( $menuByTop[0] ) )
             return tpl ( 'parts/mainmenu', array ( 'menu' => array () ) );
 
         foreach ( $menuByTop[0] as $top => $i )
         {
             $item['root'] = $i;
-            $item['sub'] = array ();
+            $item['sub'] = [];
 
-            //Проверка на подменю из модуля
-            if ( !empty ( $i['module'] ) && $i['active'] )
+                //Проверка на подменю из модуля
+            if ( $i['module'] !== "Content" )
             {
                 $obj = Starter::app ()->getModule ( $i['module'] );
                 if ( method_exists ( $obj, 'SubMenu' ) )
@@ -334,9 +312,7 @@ class Content extends CmsModule
                 $activeSet = true;
             }
             else
-            {
                 $category->active = false;
-            }
 
             $subcategories = ArrayTools::index ( SqlTools::selectObjects ( "SELECT * FROM `prefix_content` WHERE `top`='" . $category->id . "' AND `show`='Y' AND `deleted`='N' ORDER BY `order`" ), "id" );
             if ( $subcategories )
@@ -374,9 +350,7 @@ class Content extends CmsModule
         foreach ( $pages as $id => $i )
         {
             if ( $i['showmenu'] == 'N' )
-            {
                 continue;
-            }
             //Отмечаем текущую страницу
             if ( in_array ( $i['nav'], Starter::app ()->urlManager->linkPath ) )
             {
@@ -384,17 +358,13 @@ class Content extends CmsModule
                 $activeSet = true;
             }
             else
-            {
                 $i['active'] = false;
-            }
 
             $menuByTop[$i['top']][] = $i;
         }
 
         if ( empty ( $menuByTop[0] ) )
-        {
             return tpl ( 'parts/' . $template, array ( 'menu' => array () ) );
-        }
 
         //if(!$activeSet) $menuByTop[0][0]['active'] = true;
 
@@ -408,9 +378,7 @@ class Content extends CmsModule
             {
                 $obj = Starter::app ()->getModule ( $i['module'] );
                 if ( method_exists ( $obj, 'SubMenu' ) )
-                {
                     $item['sub'] = $obj->SubMenu ();
-                }
             }
             else
             {
@@ -446,14 +414,10 @@ class Content extends CmsModule
                 }
             }
             else
-            {
                 $treeids['id'] = 0;
-            }
         }
         else
-        {
             $treeids['id'] = 0;
-        }
 
         $public = $this->TreeHtml ( $tree, 0, 'menu', $treeids );
 
@@ -475,18 +439,12 @@ class Content extends CmsModule
             if ( ($level) < count ( $tree['id'] ) )
             {
                 if ( ($idd) && $idd == $tree['id'][$level] )
-                {
                     $style = "style='display: block;'";
-                }
                 else
-                {
                     $style = "style='display: none;'";
-                }
             }
             else
-            {
                 $style = "style='display: none;'";
-            }
         }
         else
         {
@@ -498,13 +456,9 @@ class Content extends CmsModule
         foreach ( $root as $branch )
         {
             if ( $branch->active )
-            {
                 $active = 'active';
-            }
             else
-            {
                 $active = '';
-            }
 
             if ( $i == $menu_count )
             {
@@ -515,9 +469,7 @@ class Content extends CmsModule
                     $html .= "</li>";
                 }
                 else
-                {
                     $html .= "<li class='sub_item'><a class='" . $active . "' href='" . $branch->link . "'>" . $branch->name . "</a></li>";
-                }
             }
             else
             {
@@ -528,14 +480,72 @@ class Content extends CmsModule
                     $html .= "</li>";
                 }
                 else
-                {
                     $html .= "<li class='sub_item'><a class='" . $active . "' href='" . $branch->link . "'>" . $branch->name . "</a></li>";
-                }
             }
             $i++;
         }
         $html .= "</ul>";
         return $html;
+    }
+
+    public function sendForm ( $params )
+    {
+        $id = ArrayTools::head ( $params );
+        $form = $this->getForm ( $id );
+        $fields = $this->getFormFields ( $form->id );
+        $cutValueLength = 10240;
+//        $submittedForm = filter_input ( INPUT_POST, "formSubmitted" );
+//        if ( $p && !$error )
+//        {
+            $mailFields = array ();
+            foreach ( $fields as $field )
+            {
+                //Заполнение полей
+                $checked = $value = '';
+                if ( isset ( $_POST[$field->name] ) )
+                {
+                    if ( $field->fieldType == 'checkbox' )
+                        $checked = 'checked="checked"';
+                    else
+                        $value = htmlspecialchars ( substr ( trim ( $_POST[$field->name] ), 0, $cutValueLength ) );
+                }
+                else
+                    $value = htmlspecialchars ( $field->default );
+
+
+                switch ( $field->fieldType )
+                {
+                    case 'text':
+                    case 'hidden':
+                        $mailFields[] = $field->label . ': ' . $value;
+                        break;
+
+                    case 'textarea':
+                        $mailFields[] = $field->label . ": \r\n" . str_repeat ( '—', 10 ) . "\r\n" . $value . "\r\n" . str_repeat ( '—', 10 );
+                        break;
+
+                    case 'checkbox':
+                        if ( !empty ( $checked ) )
+                            $mailFields[] = $field->label . ': Да';
+                        else
+                            $mailFields[] = $field->label . ': Не указано';
+                        break;
+
+                    default: break;
+                }
+            }
+            $addSysFields[] = 'IP: ' . $_SERVER['REMOTE_ADDR'] . ' http://ipgeobase.ru/?address=' . $_SERVER['REMOTE_ADDR'];
+            $addSysFields[] = 'Дата: ' . DatetimeTools::inclinedDate ( date ( 'c' ) ) . ' ' . date ( 'H:i' );
+            $addSysFields[] = 'Страница: http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+            $body = filter_input ( INPUT_POST, "comment", FILTER_SANITIZE_STRING );
+            $mailText = $body . "\r\n\r\n" . implode ( "\r\n", $mailFields ) . "\r\n\r\n" . implode ( "\r\n", $addSysFields );
+
+            $mail = new ZFmail ( $form->email, 'noreply@' . $_SERVER['SERVER_NAME'], "Письмо из формы"/* $_SERVER['SERVER_NAME'] */ . ': ' . $form->title, $mailText );
+
+            $send = $mail->send ();
+            //if ( $send )
+                return json_encode ( [ 'success' => 1, 'message' => $this->renderPart ( "formSuccessMsg", [ "form" => $form ] ) ] );
+//        }
     }
 
     /**
@@ -546,26 +556,19 @@ class Content extends CmsModule
      */
     public function form ( $id, $return = false )
     {
-
         if ( $id == '0' )
-        {
             return;
-        }
+
         if ( is_array ( $id ) )
-        {
             $id = array_shift ( $id );
-        }
 
         $cutValueLength = 10240;
         $emptyValueAlert = 'Пожалуйста, заполните поле «{label}»';
-        // $successMsg = 'Спасибо за сообщение!';
 
         $form = $this->getForm ( $id );
 
         if ( !$form )
-        {
             error ( 'Не найдена форма ' . $id );
-        }
 
         $fields = $this->getFormFields ( $form->id );
         $js = "";
@@ -599,9 +602,7 @@ class Content extends CmsModule
 
         //Если админ
         if ( !session_id () )
-        {
             session_start ();
-        }
         if ( isset ( $_SESSION['admin']['type'] ) )
         {
             $is_admin = ($_SESSION['admin']['type'] == 'a');
@@ -623,18 +624,12 @@ class Content extends CmsModule
                 if ( isset ( $_POST[$field->name] ) )
                 {
                     if ( $field->fieldType == 'checkbox' )
-                    {
                         $checked = 'checked="checked"';
-                    }
                     else
-                    {
                         $value = htmlspecialchars ( substr ( trim ( $_POST[$field->name] ), 0, $cutValueLength ) );
-                    }
                 }
                 else
-                {
                     $value = htmlspecialchars ( $field->default );
-                }
 
 
                 switch ( $field->fieldType )
@@ -650,13 +645,9 @@ class Content extends CmsModule
 
                     case 'checkbox':
                         if ( !empty ( $checked ) )
-                        {
                             $mailFields[] = $field->label . ': Да';
-                        }
                         else
-                        {
                             $mailFields[] = $field->label . ': Не указано';
-                        }
                         break;
 
                     default: break;
@@ -674,9 +665,7 @@ class Content extends CmsModule
             if ( $send )
             {
                 if ( $return )
-                {
                     return array ( 'success' => 1, 'message' => $formSuccessMsg );
-                }
                 else
                 {
                     echo $formSuccessMsg;
@@ -688,18 +677,12 @@ class Content extends CmsModule
         if ( $form->view == 'Y' )
         {
             if ( $return )
-            {
                 return $html;
-            }
             else
-            {
                 echo $html;
-            }
         }
         else
-        {
             return false;
-        }
     }
     /**
      * <p>Массив форм индексированный по Id</p>
@@ -740,13 +723,9 @@ class Content extends CmsModule
         }
 
         if ( is_numeric ( $id ) && array_key_exists ( $id, $this->formsById ) )
-        {
             $form = $this->formsById[$id];
-        }
         elseif ( array_key_exists ( $id, $this->formsByAlias ) )
-        {
             $form = $this->formsByAlias[$id];
-        }
 
         return $form;
     }

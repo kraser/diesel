@@ -1,134 +1,95 @@
 jQuery(document).ready(function()
 {
-    $(function()
-    {
-        // обработка настраиваемых слайдеров
-        if($('.sliders').size())
-        {
-            $('.sliders').each(function(idx) {
-                var sldr = $(this);
-                var anSpeed = +sldr.find("#anSpeed").text();// скорость перехода в миллисекундах
-                anSpeed = anSpeed ? anSpeed : 300;
-                var auSpeed = +sldr.find("#auSpeed").text();// время между переходами (миллисекунды)
-                auSpeed = auSpeed ? auSpeed : 3000;
-                var tranz = sldr.find("#tranz").text();// переходы: horizontal, vertical, fade
-                tranz = tranz ? tranz : "horizontal";
-                var arrows = sldr.find("#arrows").text();// переходы: horizontal, vertical, fade
-                arrows = !arrows || arrows=="false" ? false : true; //генерировать стрелки вперед и назад (true/false)
-                var anBullets = sldr.find("#anBullets").text();// отображение bullets
-                anBullets = !anBullets || anBullets=="false" ? false : true;
-                sldr.mobilyslider({
-                    content: ".sliderContent", // селектор для контейнера слайдера
-                    //children: "div",  // селектор для дочерних элементов - слайдов
-                    transition: tranz, // переходы: horizontal, vertical, fade
-                    animationSpeed: anSpeed, // скорость перехода в миллисекундах
-                    autoplay: true, // включение автопроигрывания
-                    autoplaySpeed: auSpeed, // время между переходами (миллисекунды)
-                    //pauseOnHover: false, // останавливать навигацию при наведении на слайдер: false, true
-                    bullets: anBullets, // генерировать навигацию (true/false, class: sliderBullets)
-                    arrows: arrows, // генерировать стрелки вперед и назад (true/false, class: sliderArrows)
-                    //arrowsHide: true, // показывать стрелки только при наведении
-                    //prev: "prev", // название класса для кнопки назад
-                    //next: "next", // название класса для кнопки вперед
-                    //animationStart: function() { // вызывать функцию при старте перехода
-                    //},
-                    //animationComplete: function() {// вызывать функцию когда переход завершен
-                    //},
-                });
-            });
-        }
-
-        // обработка каруселей-------------------------------
-        $('.image_carousel .img').each(function() {
-            $('.image_carousel .img').css('width', $('.image_carousel .img img').width() + 160);
-        });
-        if (typeof carouselOptions !== "undefined")
-        {
-            for (var i = 0; i < carouselOptions.length; i++)
-            {
-                var option = carouselOptions[i];
-                $("#" + option.id).carouFredSel(option.options);
-            }
-        }
-    });
-
     if (typeof initFancy !== "undefined")
         initFancy;
 
-
+    //$(document).on('click', "#submit")
     var container = $(".userBox");
     container.click(".userAction", auth);
 });
 
-function Quantity(id, sign, maxValue, step, basketId)
+function setQuantity(id, quantity, el)
 {
-    var element = $("#count" + basketId);
-    var value = parseInt(element.attr('value')) + (sign === "p" ? 1 : -1) * parseInt(step);
-    if(value <= 0)
-    {
-        location.href="basket/del/" + id;
-    }
+    //var element = $("#count" + basketId);
+    var value = parseInt(quantity);
+//    if(value <= 0)
+//    {
+//        location.href="basket/del/" + id;
+//    }
 
     $.ajax({
         type: 'post',
-        url: '/Basket/Edit',
+        url: '/Basket/edit',
         dataType: "json",
-        data: {
-            id: id,
-            count: value,
-            basketId: basketId
+        data:
+        {
+            //id: id,
+            quantity: value,
+            basketId: id
         },
-        success: function(reply) {
-            if (!reply.result) {
-                //alert("Извитите, что-то пошло не так :(");
-            }
-            else
-            {
-                element.attr('value', value);
-                element.val(value);
-                var regexp = /[^,0-9]+/;
-                var total = reply.totals.summ.replace("&nbsp;", "").replace(regexp, "");
-                $('#BasketInfo span').html(total);
-                $('#dTPrice' + basketId).html(reply.tprice);
-                $("#dSTCount").html(reply.totals.count);
-                $("#dSTPrice").html(reply.totals.summ);
-            }
+        success: function(reply)
+        {
+//            if (!reply.result) {
+//                //alert("Извитите, что-то пошло не так :(");
+//            }
+//            else
+//            {
+//                element.attr('value', value);
+//                element.val(value);
+//                var regexp = /[^,0-9]+/;
+//                var total = reply.totals.summ.replace("&nbsp;", "").replace(regexp, "");
+//                $('#BasketInfo span').html(total);
+//                $('#dTPrice' + basketId).html(reply.tprice);
+//                $("#dSTCount").html(reply.totals.count);
+//                $("#dSTPrice").html(reply.totals.summ);
+//            }
+            $('li.navbar-minicart').html(reply.html);
+            if ( value <= 0)
+                $(el).closest("tr").remove();
+
+            $(el).closest("tr").find('td.product-subtotal span.amount').html(reply.basket.products[id].total);
         }
     });
 
 
 }
 
-function addToBasket(id)
+function addToBasket(id, quantity)
 {
     $.ajax(
     {
         type: 'post',
-        url: '/Basket/Add',
+        url: '/Basket/add',
         dataType: "json",
         data:
         {
             'id': id,
             'format': 'inlist',
-            'quantity': 1
+            'quantity': quantity
         },
         success: function(reply)
         {
-            if (!reply.result)
-            {
-                //alert("Извините, что-то пошло не так :(");
-            }
-            else
-            {
+//            if (!reply.result)
+//            {
+//                //alert("Извините, что-то пошло не так :(");
+//            }
+//            else
+//            {
+//
+//                $('#buyButtonWrap' + id).html(reply.buybutton);
+//
+//                var imgSrc = reply.block.count ? basketImg.fullImg : basketImg.emptyImg;
+//
+//                $('#BasketImg img').attr("src", imgSrc);
+//                var el = $('#BasketInfo span');
+//                el.html(reply.block.summ);
+//
+//                $('#mobiel-basket-count').html(reply.basket.count);
+//            }
 
-                $('#buyButtonWrap' + id).html(reply.buybutton);
-
-                var imgSrc = reply.block.count ? basketImg.fullImg : basketImg.emptyImg;
-
-                $('#BasketImg img').attr("src", imgSrc);
-                var el = $('#BasketInfo span');
-                el.html(reply.block.summ);
-            }
+            //$('#minicart-count-num').html(reply.basket.count);
+            $('li.navbar-minicart').html(reply.html);
+            alert("Товар добавлен в корзину");
         }
     });
 }

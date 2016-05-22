@@ -19,28 +19,28 @@ class Question extends AdminModule
             exit ();
         }
 
-        $images = new Images();
+        $imager = Starter::app ()->imager;
 
         //Добавление картинки
         if ( !empty ( $_FILES ) )
         {
-            $images->AddImage ( $_FILES['image']['tmp_name'], __CLASS__, $id, $_FILES['image']['name'] );
+            $imager->addImage ( $_FILES['image']['tmp_name'], __CLASS__, $id, $_FILES['image']['name'] );
         }
 
         //Задание картинки по-умолчанию
         if ( isset ( $_GET['star'] ) )
         {
-            $images->StarImage ( $_GET['star'] );
+            $imager->starImage ( $_GET['star'] );
         }
 
         //Удаление
         if ( isset ( $_GET['del'] ) )
         {
-            $images->DelImage ( $_GET['del'] );
+            $imager->delImage ( $_GET['del'] );
         }
 
         echo tpl ( 'modules/' . __CLASS__ . '/' . __FUNCTION__, array (
-            'images' => $images->GetImages ( __CLASS__, $id ),
+            'images' => $imager->getImages ( __CLASS__, $id ),
             'link' => $this->GetLink (),
             'module' => __CLASS__,
             'module_id' => $id,

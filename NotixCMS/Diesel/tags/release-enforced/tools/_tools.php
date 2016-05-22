@@ -55,10 +55,10 @@ function priceFormat ( $price, $decimals = null, $pointSep = ',', $thousandSep =
     $decimals = !is_numeric ( $decimals ) ? Tools::getSettings ( 'Catalog', 'price_round', 0 ) : ( int ) $decimals;
     $retVal = number_format ( $price, $decimals, $pointSep, $thousandSep );
 
-    if ( $thousandSep === ' ' )
-    {
-        $retVal = str_replace ( ' ', "&nbsp;", $retVal );
-    }
+//    if ( $thousandSep === ' ' )
+//    {
+//        $retVal = str_replace ( ' ', "&nbsp;", $retVal );
+//    }
 
     return $retVal;
 }

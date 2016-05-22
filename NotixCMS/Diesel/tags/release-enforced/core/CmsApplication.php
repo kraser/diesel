@@ -31,7 +31,8 @@ class CmsApplication extends CmsModule
             //'modules' => DOCROOT . DS . "modules",
             "components" => $this->getBasePath () . DS . "_comps",
             "controllers" => DOCROOT . DS . 'controllers',
-            'widgets'=> DOCROOT . DS . 'widgets'
+            'widgets'=> DOCROOT . DS . 'widgets',
+            'behaviors' => DOCROOT . DS . "behaviors",
         ];
 		if ( isset ( $config['aliases'] ) )
         {
@@ -44,7 +45,8 @@ class CmsApplication extends CmsModule
         [
             "libs.*",
             "controllers.*",
-            "widgets.*"
+            "widgets.*",
+            "behaviors.*",
         ];
         if ( isset ( $config['imports'] ) )
         {
@@ -167,6 +169,17 @@ class CmsApplication extends CmsModule
     public function getTheme ()
     {
         return $this->theme;
+    }
+
+    private $adminMail;
+    public function setAdminMail ( $mail )
+    {
+        $this->adminMail = $mail;
+    }
+
+    public function getAdminMail ()
+    {
+        return $this->adminMail;
     }
 
     public function setParameter ( $parameter, $value )

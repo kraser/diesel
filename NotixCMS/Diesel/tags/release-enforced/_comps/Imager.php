@@ -21,73 +21,63 @@ class Imager extends CmsComponent
 
     /**
      * <pre>Добавляет изображение в хранилище</pre>
-     * @param File $file <p>Загружаемый файл</p>
+     * @param String $file <p>Имя загружаемого файла</p>
      * @param String $module <p>Имя модуля - владельца изображения</p>
-     * @param Integer $module_id <p>Ид элемента - владельца изображения</p>
+     * @param Integer $moduleId <p>ID элемента - владельца изображения</p>
      * @param String $fileName <p>Имя загружаемого файла</p>
      * @param Boolean $isMain <p>Флаг главного изображения из ряда</p>
      * @return Boolean <p>результат операции</p>
      */
-    function addImage ( $file, $module, $module_id = 0, $fileName = '', $isMain = false )
+    function addImage ( $file, $module, $moduleId = 0, $fileName = '', $isMain = false )
     {
         if ( is_file ( $file ) )
         {
             //Альтернативный ключ (не по integer id)
-            if ( !empty ( $module_id ) && !is_numeric ( $module_id ) )
+            if ( !empty ( $moduleId ) && !is_numeric ( $moduleId ) )
             {
-                if ( preg_match ( '%[\\\\/:*?<>|]+%', $module_id ) )
+                if ( preg_match ( '%[\\\\/:*?<>|]+%', $moduleId ) )
                     return false;
                 else
                 {
-                    $sql_select = "`alter_key`='" . $module_id . "'";
-                    $sql_update = "`alter_key`='" . $module_id . "'";
+                    $sql_select = "`alter_key`='" . $moduleId . "'";
+                    $sql_update = "`alter_key`='" . $moduleId . "'";
                     $sql_insert = "`alter_key`";
                 }
             }
             else
             {
-                $sql_select = "`module_id`='" . $module_id . "'";
-                $sql_update = "`module_id`='" . $module_id . "'";
+                $sql_select = "`module_id`='" . $moduleId . "'";
+                $sql_update = "`module_id`='" . $moduleId . "'";
                 $sql_insert = "`module_id`";
             }
 
             $md5 = md5_file ( $file );
-            if ( isset ( $this->alldata[$module][$module_id][$md5] ) )
+            if ( isset ( $this->alldata[$module][$moduleId][$md5] ) )
                 return false;
 
             $ext = '';
             if ( !empty ( $fileName ) )
-            {
-                $ext = strtolower ( pathinfo($fileName, PATHINFO_EXTENSION));
-            }
+                $ext = strtolower ( pathinfo ( $fileName, PATHINFO_EXTENSION ) );
 
             //Проверка расширения
             if ( !in_array ( $ext, $this->allowedExts ) )
-            {
                 return false;
-            }
 
-            $dir = '/data/moduleImages/' . $module . '/' . $module_id;
+            $dir = '/data/moduleImages/' . $module . '/' . $moduleId;
             $src = $dir . '/' . $md5 . '.' . $ext;
             $dest = DOCROOT . $src;
 
             if ( !is_dir ( DOCROOT . $dir ) )
-            {
-                mkdir ( DOCROOT . $dir, 0777, true );
-            }
-            copy ( $file, $dest );
-            $this->resize ( $dest, 500, 500 );
+                FileTools::createDir ( DOCROOT . $dir );
 
+            FileTools::copyFile ( $file, $dest );
+            $this->resize ( $dest, 500, 500 );
             $images = SqlTools::selectRows ( "SELECT * FROM `prefix_images` WHERE `module`='" . $module . "' AND " . $sql_select . " AND `main`='Y'" );
             if ( count ( $images ) == 0 )
-            {
                 $isMain = true;
-            }
 
             if ( $isMain )
-            {
                 SqlTools::execute ( "UPDATE `prefix_images` SET `main`='N'  WHERE `module`='" . $module . "' AND " . $sql_select . " AND `main`='Y'" );
-            }
             $lastId = SqlTools::insert ( "
                     INSERT INTO `prefix_images`
                             (`src`, `md5`, `module`, " . $sql_insert . ", `main`)
@@ -95,16 +85,14 @@ class Imager extends CmsComponent
                             '" . $src . "',
                             '" . $md5 . "',
                             '" . $module . "',
-                            '" . $module_id . "',
+                            '" . $moduleId . "',
                             '" . ( $isMain ? 'Y' : 'N' ) . "'
                     )
             " );
             return $lastId;
         }
         else
-        {
             return false;
-        }
     }
 
     /**
@@ -115,11 +103,10 @@ class Imager extends CmsComponent
     function starImage ( $id )
     {
         $id = ( int ) $id;
-        $img = $this->GetImage ( $id );
+        $img = $this->getImage ( $id );
         if ( !$img )
-        {
             return false;
-        }
+
         SqlTools::execute ( "UPDATE `prefix_images` SET `main`='N' WHERE `module`='" . $img['module'] . "' AND ((`module_id`='" . $img['module_id'] . "' AND `module_id`!=0) OR (`alter_key`='" . $img['alter_key'] . "' AND `alter_key`!=''))" );
         SqlTools::execute ( "UPDATE `prefix_images` SET `main`='Y' WHERE `id`='" . $id . "'" );
 
@@ -134,16 +121,14 @@ class Imager extends CmsComponent
     function delImage ( $id )
     {
         $id = ( int ) $id;
-        $img = $this->GetImage ( $id );
+        $img = $this->getImage ( $id );
         if ( !$img )
-        {
             return false;
-        }
+
         SqlTools::execute ( "DELETE FROM `prefix_images` WHERE `id`='" . $id . "'" );
         if ( $img['main'] == 'Y' )
-        {
             SqlTools::execute ( "UPDATE `prefix_images` SET `main`='Y' WHERE `module`='" . $img['module'] . "' AND ((`module_id`='" . $img['module_id'] . "' AND `module_id`!=0) OR (`alter_key`='" . $img['alter_key'] . "' AND `alter_key`!='')) LIMIT 1" );
-        }
+
         return true;
     }
 
@@ -156,13 +141,23 @@ class Imager extends CmsComponent
     function addVideo ( $id, $url )
     {
         $id = ( int ) $id;
-        $img = $this->GetImage ( $id );
+        $img = $this->getImage ( $id );
         if ( !$img )
-        {
             return false;
-        }
+
         SqlTools::execute ( "UPDATE `prefix_images` SET `video`='". $url ."' WHERE `id`='". $img[id] ."' AND `module_id`='" . $img[module_id] . "' AND `module`='" . $img[module] . "' ");
         return true;
+    }
+
+    /**
+     * <pre>Возвращает строку данных (по полям в таблице) об изображении</pre>
+     * @param Integer $id <p>Ид изображения</p>
+     * @return Array <p>Строка данных</p>
+     */
+    public function getImage ( $id )
+    {
+        $id = ( int ) $id;
+        return SqlTools::selectRow ( "SELECT * FROM `prefix_images` WHERE `id`='" . $id . "'" );
     }
 
     /**
@@ -212,12 +207,9 @@ class Imager extends CmsComponent
         foreach ( $moduleIds as $mid )
         {
             if ( !isset ( $this->preparedImgs[$module][$mid] ) )
-            {
                 $this->preparedImgs[$module][$mid] = false;
-            }
         }
     }
-
 
     /**
      * <pre>
@@ -251,7 +243,6 @@ class Imager extends CmsComponent
      * привязанных к сущностям модуля</pre>
      * @param String $module <p>Имя модуля (тип сущностей)</p>
      * @param Array $moduleIds <p>Массив ид сущностей для которых готовятся данные</p>
-     * @param Boolean $onlyMain <p>Флаг, ограничивающий выборку только главными изображениями</p>
      * @return Boolean <p>Результат</p>
      */
     public function getMainImages ( $module, $moduleIds )

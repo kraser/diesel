@@ -22,6 +22,17 @@ class Header extends CmsComponent
         $this->model = $model;
     }
 
+    public function init ()
+    {
+        $theme = Starter::app ()->getTheme();
+        $path = Starter::getAliasPath ( "webroot.site" );
+        if ( file_exists ( Starter::getAliasPath ( "webroot.site" ) . DS . $theme . DS . "head.php" ) )
+            include Starter::getAliasPath ( "webroot.site" ) . DS . $theme . DS . "head.php";
+        else
+            include Starter::getAliasPath ( "webroot" ) . DS . $theme . DS . "head.php";
+        parent::init();
+    }
+
     /**
      * <pre>Устанавливает favicon для вывода</pre>
      * @param String $favicon <p>pathname к favicon</p>
@@ -38,6 +49,15 @@ class Header extends CmsComponent
     public function setTitle ( $title )
     {
         $this->model->title = $title;
+    }
+
+    /**
+     * <pre>Устанавливает заголовок страницы</pre>
+     * @param type $title <p>Текст заголовка</p>
+     */
+    public function getTitle ()
+    {
+        return $this->model->title;
     }
 
     /**
