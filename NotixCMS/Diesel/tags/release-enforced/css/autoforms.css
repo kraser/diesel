@@ -1,0 +1,54 @@
+.autoform
+{
+    float: left;
+    overflow:hidden;
+    behavior: url(../css/ie-css3.htc);
+    color: #c5c6c6;
+}
+.autoform h2 { margin: 0; color: #464646;}
+.autoform label { display: block; margin: 1em 0 .1em .4em; }
+.autoform input,.autoform textarea, .autoform input[type="text"], .autoform input[type="password"]
+{
+    border:solid 1px #d3cdbc;
+    display: block;
+    padding:.3em;
+    width:90%;
+    font-size:14px;
+    font-family: Trebuchet MS, arial, sans-serif;
+    border-radius: 3px;
+    background-color: white;
+}
+.autoform textarea { height: 6.1em; }
+.autoform .autoformCheckbox { margin:1em 0 .3em; }
+.autoform .autoformCheckbox input { display: inline !important; width:auto; margin: 0; vertical-align: middle; }
+.autoform .autoformCheckbox label { display: inline !important; width:auto; }
+.autoform button {
+
+
+    display: block; margin: 1.5em 0 .3em; font-size:14px; height:40px;
+    font-size: 16px;
+    color: #fff;
+    width: 110px;
+    cursor: pointer;
+    padding: 7px 0px;
+    margin-bottom: 2px;
+
+    text-align: center;
+    border: solid 1px #8d2322;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    background: #d9615d;
+    background: -moz-linear-gradient(top, #d9615d 0%, #d8504b 49%, #d33d37 51%, #952524 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#d9615d), color-stop(49%,#d8504b), color-stop(51%,#d33d37), color-stop(100%,#952524));
+    background: -webkit-linear-gradient(top, #d9615d 0%,#d8504b 49%,#d33d37 51%,#952524 100%);
+    background: -o-linear-gradient(top, #d9615d 0%,#d8504b 49%,#d33d37 51%,#952524 100%);
+    background: -ms-linear-gradient(top, #d9615d 0%,#d8504b 49%,#d33d37 51%,#952524 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d9615d', endColorstr='#952524',GradientType=0 );
+    font-weight: bold;
+    text-decoration: none;
+
+}
+.autoform .required { margin: 0;}
+.autoform .jep { color:red; }
+.autoform .requiredHint {margin:0;}
+

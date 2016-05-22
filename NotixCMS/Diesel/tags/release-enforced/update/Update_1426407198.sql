@@ -1,0 +1,8 @@
+-- upadte for timestamp 1426407198
+CREATE TABLE IF NOT EXISTS `prefix_regions`
+(
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    PRIMARY KEY (`id`)
+)
+ENGINE=MyISAM DEFAULT CHARSET=utf8 ;

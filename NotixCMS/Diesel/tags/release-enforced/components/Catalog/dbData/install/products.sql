@@ -1,0 +1,36 @@
+CREATE TABLE IF NOT EXISTS `prefix_products`
+(
+    `id` INTEGER(11) NOT NULL AUTO_INCREMENT,
+    `top` INTEGER(11) NOT NULL,
+    `order` INTEGER(11) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `shortName` VARCHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, 
+    `nav` VARCHAR(100) NOT NULL,
+    `brand` INTEGER(11) NOT NULL,
+    `price` DECIMAL(10,2) NOT NULL,
+    `currency` INTEGER(11) NOT NULL,
+    `unit` VARCHAR(10) DEFAULT '',
+    `date` DATETIME NOT NULL,
+    `show` ENUM('Y','N') NOT NULL DEFAULT 'Y',
+    `deleted` ENUM('Y','N') NOT NULL DEFAULT 'N',
+    `created` DATETIME NOT NULL,
+    `modified` DATETIME NOT NULL,
+    `anons` TEXT NOT NULL,
+    `text` TEXT NOT NULL,
+    `types` TEXT NOT NULL,
+    `is_action` ENUM('Y','N') NOT NULL DEFAULT 'N',
+    `is_featured` ENUM('Y','N') NOT NULL DEFAULT 'N',
+    `is_lider` ENUM('Y','N') NOT NULL DEFAULT 'N',
+    `is_exist` ENUM('Y','N') NOT NULL DEFAULT 'Y',
+    `noIndex` ENUM('Y', 'N') NOT NULL DEFAULT 'N' COMMENT 'Флаг запрета на индексирование Y-запрещает индексирование, N-разрешает',
+    `availability` TEXT NOT NULL,
+    `relations` VARCHAR(255) NOT NULL,
+    `rate` INTEGER(11) NOT NULL,
+    `discount` INTEGER(11) NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `show` (`show`),
+    KEY `deleted` (`deleted`),
+    KEY `top` (`top`)
+)
+ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
