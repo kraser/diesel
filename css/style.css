@@ -1,0 +1,225 @@
+#indexCatalogList
+{
+    margin-left: -24px;
+}
+
+.index_catalog_list
+{
+    position: relative;
+    min-height: 500px;
+    width: 370px;
+    margin-bottom: 20px;
+}
+
+.sub_catalog .sub_catalog_list.level_1
+{
+    position: relative;
+    margin: 10px 15px;
+    width: auto;
+}
+
+.sub_catalog_item.level_1
+{
+    width: 260px;
+}
+
+.sub_catalog_list.level_1.fluid .sub_catalog_item.level_1
+{
+    position: absolute;
+}
+
+.sub_catalog ul li span, .index_catalog_list span
+{
+    font-size:10px;
+    color:#808080;
+    margin-left:5px;
+}
+
+.index_catalog_list span:after
+{
+	content: "\)";
+}
+
+.index_catalog_list span:before
+{
+	content: "\(";
+}
+
+.sub_catalog_list.level_2, .index_catalog_list .sub_catalog_list.level_1
+{
+    list-style: disc outside;
+    margin-left: 20px;
+}
+
+.sub_catalog_item.level_2, .index_catalog_list .sub_catalog_item.level_1
+{
+    color: #878787;
+    font-size: 10px;
+}
+.sub_catalog_list.level_3, .index_catalog_list .sub_catalog_list.level_2, .index_catalog_list .sub_catalog_list.level_3
+{
+    margin-left: 18px;
+}
+
+.sub_catalog .border_bottom, .index_catalog_list .border_bottom {
+	border-bottom:#cfdce6 solid 1px;
+	padding-top:13px;
+	padding-bottom:13px;
+	float:left;
+	width:250px;
+}
+.index_catalog_list .border_bottom {
+	width: 370px;
+	margin-right: 20px;
+	position: absolute;
+}
+.nojs .index_catalog_list .border_bottom {
+	position: relative;
+}
+
+.sub_catalog_item a, .sub_catalog_item a:visited,
+.index_catalog_list .sub_catalog_item a,
+.index_catalog_list .sub_catalog_item a:visited
+{
+    color: #0662a8;
+    font-size: 15px;
+    display: inline;
+    padding: 0px;
+}
+
+.sub_catalog_item, .index_catalog_list li
+{
+    padding-top: 5px;
+}
+
+.cat_main li .sub_catalog_item:hover,
+.cat_main li .sub_catalog_item a:hover {
+	background:none;
+}
+
+.cat_main li .sub_catalog_item a:hover {
+	text-decoration:underline;
+}
+
+.sub_catalog_list.level_2 a,
+.sub_catalog_list.level_2 a:visited,
+.index_catalog_list .sub_catalog_list.level_1 a,
+.index_catalog_list .sub_catalog_list.level_1 a:visited
+{
+    font-size:13px;
+    color:#808080;
+}
+
+.sub_catalog_item.level_1 > a, .index_catalog_list .sub_catalog_item.level_0 > a
+{
+    font-weight: bold;
+}
+
+.index_catalog_list .sub_catalog_subhide > ul
+{
+    display: none;
+}
+
+.index_catalog_list .open_sub_list
+{
+    cursor: pointer;
+    cursor: hand;
+    padding: 5px;
+    margin-left:5px;
+}
+
+.index_catalog_list .open_sub_list:after, .index_catalog_list .open_sub_list:before
+{
+    content: "";
+}
+
+.index_catalog_list .sub_catalog_subhide b
+{
+    transform: rotate(0deg);
+}
+
+.index_catalog_list b
+{
+    display:inline-block;
+    transform: rotate(180deg);
+    width:14px;
+    height:14px;
+    background: url("../images/switch.png") no-repeat transparent;
+    position:relative;
+    transition:transform 0.2s ease-in 0s;
+    color: #054575;
+    top: 3px;
+}
+
+    /* Хлебные крошки */
+    /*
+.bread_crumbs {
+	padding:10px;
+	font-size:12px;
+	background:#edf4f7;
+	border:#cad9e0 solid 1px;
+	border-width:0 1px 1px 1px;
+	-webkit-border-bottom-left-radius:4px;
+		-moz-border-radius-bottomleft:4px;
+			border-bottom-left-radius:4px;
+
+	-webkit-border-bottom-right-radius:4px;
+		-moz-border-radius-bottomright:4px;
+			border-bottom-right-radius:4px;
+
+}
+
+.bread_crumbs a {
+	font-size:12px;
+	margin-right:6px;
+}
+
+.bread_crumbs a .icon {
+    background:transparent url(../images/sprite_common.png?v=6) 0px -315px no-repeat;
+    width: 8px;
+    height: 11px;
+    margin: 2px 0 0 8px;
+    display: inline-block;
+}
+
+.bread_crumbs a:hover {
+	color:#054575;
+	text-decoration:none;
+}
+*/
+
+ol, ul
+{
+    list-style: none outside none;
+}
+
+.unzip
+{
+    margin-bottom: 10px;
+    margin-left: -24px;
+    text-decoration: none;
+}
+.unzip li {
+    display: inline;
+    margin-right: 10px;text-decoration: none;
+}
+
+.unzip a
+{
+    text-decoration: none;
+}
+
+a
+{
+    color: #808080;
+}
+
+
+h1
+{
+    color: #F58220;
+    font-size: 22px;
+    font-weight: normal;
+    margin: 8px 0 13px 16px;
+}
+

@@ -1,0 +1,1 @@
+<a href='/privateOffice/login'>Ура!</a>

@@ -1,0 +1,1 @@
+<p>Система управления сайтом — <?php echo Starter::app ()->title; ?></p>

@@ -1,0 +1,600 @@
+/*!
+ * Sport Icons v1.0 (http://rus-shrift.ru)
+ */
+@font-face {
+	font-family: "sport-icon";
+	src: url("fonts/sport-icon.eot");
+	src: url("fonts/sport-icon.eot#iefix") format("embedded-opentype"),
+	url("fonts/sport-icon.woff") format("woff"),
+	url("fonts/sport-icon.ttf") format("truetype"),
+	url("fonts/sport-icon.svg") format("svg");
+	font-weight: normal;
+	font-style: normal;
+}
+[class^="sport-"]:before, [class*=" sport-"]:before,
+[class^="sport-"]:after, [class*=" sport-"]:after {
+	font-family: sport-icon;
+font-style: normal;
+margin-left: 20px;
+font-size: 16px;
+}
+
+.sport-aim5:before {
+	content: "\e000";
+}
+.sport-american34:before {
+	content: "\e001";
+}
+.sport-americanfootball3:before {
+	content: "\e002";
+}
+.sport-archer2:before {
+	content: "\e003";
+}
+.sport-award54:before {
+	content: "\e004";
+}
+.sport-award69:before {
+	content: "\e005";
+}
+.sport-award73:before {
+	content: "\e006";
+}
+.sport-badminton9:before {
+	content: "\e007";
+}
+.sport-ball23:before {
+	content: "\e008";
+}
+.sport-ball72:before {
+	content: "\e009";
+}
+.sport-baseball35:before {
+	content: "\e00a";
+}
+.sport-basketball51:before {
+	content: "\e00b";
+}
+.sport-basketball9:before {
+	content: "\e00c";
+}
+.sport-bicycle14:before {
+	content: "\e00d";
+}
+.sport-bicycle24:before {
+	content: "\e00e";
+}
+.sport-bicycle6:before {
+	content: "\e00f";
+}
+.sport-billiard2:before {
+	content: "\e010";
+}
+.sport-bowling3:before {
+	content: "\e011";
+}
+.sport-bowlingball:before {
+	content: "\e012";
+}
+.sport-boxing10:before {
+	content: "\e013";
+}
+.sport-boxing3:before {
+	content: "\e014";
+}
+.sport-brazil6:before {
+	content: "\e015";
+}
+.sport-canoe1:before {
+	content: "\e016";
+}
+.sport-checkered12:before {
+	content: "\e017";
+}
+.sport-chessgame2:before {
+	content: "\e018";
+}
+.sport-chesspiece1:before {
+	content: "\e019";
+}
+.sport-chesspiece2:before {
+	content: "\e01a";
+}
+.sport-climb:before {
+	content: "\e01b";
+}
+.sport-climbing5:before {
+	content: "\e01c";
+}
+.sport-crash-helmet:before {
+	content: "\e01d";
+}
+.sport-cups17:before {
+	content: "\e01e";
+}
+.sport-cycling:before {
+	content: "\e01f";
+}
+.sport-cycling5:before {
+	content: "\e020";
+}
+.sport-cyclist3:before {
+	content: "\e021";
+}
+.sport-dance2:before {
+	content: "\e022";
+}
+.sport-dart13:before {
+	content: "\e023";
+}
+.sport-dart20:before {
+	content: "\e024";
+}
+.sport-dice12:before {
+	content: "\e025";
+}
+.sport-diver2:before {
+	content: "\e026";
+}
+.sport-dumbbell:before {
+	content: "\e027";
+}
+.sport-dumbbell1:before {
+	content: "\e028";
+}
+.sport-dumbbell20:before {
+	content: "\e029";
+}
+.sport-dumbbell7:before {
+	content: "\e02a";
+}
+.sport-dumbbells12:before {
+	content: "\e02b";
+}
+.sport-feather33:before {
+	content: "\e02c";
+}
+.sport-female139:before {
+	content: "\e02d";
+}
+.sport-female141:before {
+	content: "\e02e";
+}
+.sport-fight1:before {
+	content: "\e02f";
+}
+.sport-figure:before {
+	content: "\e030";
+}
+.sport-finishline:before {
+	content: "\e031";
+}
+.sport-first33:before {
+	content: "\e032";
+}
+.sport-fish58:before {
+	content: "\e033";
+}
+.sport-flag-outline:before {
+	content: "\e034";
+}
+.sport-flag76:before {
+	content: "\e035";
+}
+.sport-flag88:before {
+	content: "\e036";
+}
+.sport-flexions:before {
+	content: "\e037";
+}
+.sport-football:before {
+	content: "\e038";
+}
+.sport-football102:before {
+	content: "\e039";
+}
+.sport-football118:before {
+	content: "\e03a";
+}
+.sport-football124:before {
+	content: "\e03b";
+}
+.sport-football157:before {
+	content: "\e03c";
+}
+.sport-football2:before {
+	content: "\e03d";
+}
+.sport-football75:before {
+	content: "\e03e";
+}
+.sport-game64:before {
+	content: "\e03f";
+}
+.sport-game65:before {
+	content: "\e040";
+}
+.sport-golf17:before {
+	content: "\e041";
+}
+.sport-golf22:before {
+	content: "\e042";
+}
+.sport-golf36:before {
+	content: "\e043";
+}
+.sport-golf9:before {
+	content: "\e044";
+}
+.sport-gym11:before {
+	content: "\e045";
+}
+.sport-gym12:before {
+	content: "\e046";
+}
+.sport-gym16:before {
+	content: "\e047";
+}
+.sport-gym43:before {
+	content: "\e048";
+}
+.sport-heart10:before {
+	content: "\e049";
+}
+.sport-heart288:before {
+	content: "\e04a";
+}
+.sport-hiking1:before {
+	content: "\e04b";
+}
+.sport-hockey1:before {
+	content: "\e04c";
+}
+.sport-horseman2:before {
+	content: "\e04d";
+}
+.sport-iceskate1:before {
+	content: "\e04e";
+}
+.sport-jet3:before {
+	content: "\e04f";
+}
+.sport-judo:before {
+	content: "\e050";
+}
+.sport-jumping15:before {
+	content: "\e051";
+}
+.sport-kickboxing1:before {
+	content: "\e052";
+}
+.sport-kitesurfing:before {
+	content: "\e053";
+}
+.sport-man-silhouette1:before {
+	content: "\e054";
+}
+.sport-man252:before {
+	content: "\e055";
+}
+.sport-man271:before {
+	content: "\e056";
+}
+.sport-man429:before {
+	content: "\e057";
+}
+.sport-man459:before {
+	content: "\e058";
+}
+.sport-martial2:before {
+	content: "\e059";
+}
+.sport-martial4:before {
+	content: "\e05a";
+}
+.sport-medieval4:before {
+	content: "\e05b";
+}
+.sport-meditation1:before {
+	content: "\e05c";
+}
+.sport-motoring1:before {
+	content: "\e05d";
+}
+.sport-mountain1:before {
+	content: "\e05e";
+}
+.sport-mountain18:before {
+	content: "\e05f";
+}
+.sport-musculous:before {
+	content: "\e060";
+}
+.sport-olympic12:before {
+	content: "\e061";
+}
+.sport-olympic17:before {
+	content: "\e062";
+}
+.sport-olympic22:before {
+	content: "\e063";
+}
+.sport-olympic3:before {
+	content: "\e064";
+}
+.sport-olympic4:before {
+	content: "\e065";
+}
+.sport-olympicgames1:before {
+	content: "\e066";
+}
+.sport-paralympic1:before {
+	content: "\e067";
+}
+.sport-paralympic14:before {
+	content: "\e068";
+}
+.sport-paralympic5:before {
+	content: "\e069";
+}
+.sport-person209:before {
+	content: "\e06a";
+}
+.sport-person228:before {
+	content: "\e06b";
+}
+.sport-person242:before {
+	content: "\e06c";
+}
+.sport-person243:before {
+	content: "\e06d";
+}
+.sport-pilates40:before {
+	content: "\e06e";
+}
+.sport-pingpong5:before {
+	content: "\e06f";
+}
+.sport-podium2:before {
+	content: "\e070";
+}
+.sport-prize3:before {
+	content: "\e071";
+}
+.sport-race9:before {
+	content: "\e072";
+}
+.sport-racing4:before {
+	content: "\e073";
+}
+.sport-racket1:before {
+	content: "\e074";
+}
+.sport-racket4:before {
+	content: "\e075";
+}
+.sport-rank2:before {
+	content: "\e076";
+}
+.sport-recognition6:before {
+	content: "\e077";
+}
+.sport-rugby3:before {
+	content: "\e078";
+}
+.sport-rugbyball:before {
+	content: "\e079";
+}
+.sport-run4:before {
+	content: "\e07a";
+}
+.sport-runer:before {
+	content: "\e07b";
+}
+.sport-runner6:before {
+	content: "\e07c";
+}
+.sport-silhouette66:before {
+	content: "\e07d";
+}
+.sport-skate5:before {
+	content: "\e07e";
+}
+.sport-skate8:before {
+	content: "\e07f";
+}
+.sport-ski10:before {
+	content: "\e080";
+}
+.sport-skydiving:before {
+	content: "\e081";
+}
+.sport-snow57:before {
+	content: "\e082";
+}
+.sport-soccer-cup:before {
+	content: "\e083";
+}
+.sport-soccer18:before {
+	content: "\e084";
+}
+.sport-soccer19:before {
+	content: "\e085";
+}
+.sport-soccer24:before {
+	content: "\e086";
+}
+.sport-soccer34:before {
+	content: "\e087";
+}
+.sport-soccer38:before {
+	content: "\e088";
+}
+.sport-soccer60:before {
+	content: "\e089";
+}
+.sport-soccer66:before {
+	content: "\e08a";
+}
+.sport-soccer71:before {
+	content: "\e08b";
+}
+.sport-sport22:before {
+	content: "\e08c";
+}
+.sport-sportive12:before {
+	content: "\e08d";
+}
+.sport-sportsball19:before {
+	content: "\e08e";
+}
+.sport-sportsball28:before {
+	content: "\e08f";
+}
+.sport-sportsball30:before {
+	content: "\e090";
+}
+.sport-sprint:before {
+	content: "\e091";
+}
+.sport-standing92:before {
+	content: "\e092";
+}
+.sport-star157:before {
+	content: "\e093";
+}
+.sport-stick-man1:before {
+	content: "\e094";
+}
+.sport-stick-man2:before {
+	content: "\e095";
+}
+.sport-stick-man3:before {
+	content: "\e096";
+}
+.sport-stillrings:before {
+	content: "\e097";
+}
+.sport-strategy8:before {
+	content: "\e098";
+}
+.sport-surfboard:before {
+	content: "\e099";
+}
+.sport-surfer:before {
+	content: "\e09a";
+}
+.sport-swimmer8:before {
+	content: "\e09b";
+}
+.sport-swimmer9:before {
+	content: "\e09c";
+}
+.sport-swimming22:before {
+	content: "\e09d";
+}
+.sport-swimming27:before {
+	content: "\e09e";
+}
+.sport-swimming28:before {
+	content: "\e09f";
+}
+.sport-swimmingpool42:before {
+	content: "\e0a0";
+}
+.sport-target51:before {
+	content: "\e0a1";
+}
+.sport-tennis2:before {
+	content: "\e0a2";
+}
+.sport-tennis27:before {
+	content: "\e0a3";
+}
+.sport-tennis29:before {
+	content: "\e0a4";
+}
+.sport-tennis3:before {
+	content: "\e0a5";
+}
+.sport-time21:before {
+	content: "\e0a6";
+}
+.sport-timer2:before {
+	content: "\e0a7";
+}
+.sport-training:before {
+	content: "\e0a8";
+}
+.sport-triumph:before {
+	content: "\e0a9";
+}
+.sport-trophy33:before {
+	content: "\e0aa";
+}
+.sport-trophy42:before {
+	content: "\e0ab";
+}
+.sport-trophy53:before {
+	content: "\e0ac";
+}
+.sport-trophy75:before {
+	content: "\e0ad";
+}
+.sport-upper20:before {
+	content: "\e0ae";
+}
+.sport-volleyball13:before {
+	content: "\e0af";
+}
+.sport-volleyball3:before {
+	content: "\e0b0";
+}
+.sport-volleyball4:before {
+	content: "\e0b1";
+}
+.sport-volleyball9:before {
+	content: "\e0b2";
+}
+.sport-walk16:before {
+	content: "\e0b3";
+}
+.sport-water36:before {
+	content: "\e0b4";
+}
+.sport-weighing24:before {
+	content: "\e0b5";
+}
+.sport-weight9:before {
+	content: "\e0b6";
+}
+.sport-weightlifter3:before {
+	content: "\e0b7";
+}
+.sport-weightlifting4:before {
+	content: "\e0b8";
+}
+.sport-weightlifting5:before {
+	content: "\e0b9";
+}
+.sport-whistle14:before {
+	content: "\e0ba";
+}
+.sport-windsurfing:before {
+	content: "\e0bb";
+}
+.sport-winner:before {
+	content: "\e0bc";
+}
+.sport-winner17:before {
+	content: "\e0bd";
+}
+.sport-winners3:before {
+	content: "\e0be";
+}
+.sport-woman5:before {
+	content: "\e0bf";
+}
+.sport-yoga13:before {
+	content: "\e0c0";
+}
