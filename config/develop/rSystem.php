@@ -3,7 +3,7 @@ $config =
 [
     'title' => 'Сибирская хоккейная лига',
     'theme' => 'sibhl',
-    'adninMail' => '',
+    'adminMail' => 'kravalsergey@yandex.ru',
     'adminPhone' => '',
     'db' =>
     [

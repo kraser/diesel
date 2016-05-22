@@ -21,7 +21,7 @@ class Messanger
      */
     public function __construct ( )
     {
-        Starter::addLoadPath ( CORE . DS . "MessageSender" );
+        Starter::import ( "core.MessageSender.*" );
         $this->senderTypes = array
         (
             'sms' => 'SmsSender',

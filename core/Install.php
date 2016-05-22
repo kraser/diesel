@@ -21,11 +21,12 @@ class Install extends CmsComponent
         $this->updateDb ();
     }
 
+    private $tables;
     private function isNoTables ()
     {
         $dbName = $this->dbConf['dbName'];
-        $tables = SqlTools::selectRows ( "SHOW TABLES IN `$dbName`", MYSQL_ASSOC );
-        if ( count ( $tables ) )
+        $this->tables = SqlTools::selectRows ( "SHOW TABLES IN `$dbName`", MYSQL_ASSOC );
+        if ( count ( $this->tables ) )
             return false;
         return true;
     }
@@ -110,7 +111,8 @@ class Install extends CmsComponent
         }
         catch ( CmsException $ex )
         {
-            if ( $ex->getCode () === 1146 )
+            $code = $ex->getCode ();
+            if ( $ex->getCode () == 1146 )
                 $result = false;
             else
                 throw $ex;
@@ -134,7 +136,7 @@ class Install extends CmsComponent
         if ( $result )
             SqlTools::insert ( "INSERT INTO `prefix_migration` (`stamp`) VALUES ('$stamp')" );
     }
-    
+
     private function executePhpMigration ( $fileName )
     {
         return require $fileName;

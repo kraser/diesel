@@ -112,6 +112,35 @@ class CmsComponent extends CmsObject
     {
         $this->parent = $module;
     }
+    
+    private $behaviors;
+    public function attachBehavior ( $name, $behaviorConfig )
+    {
+        $behavior = Starter::createComponent ( $behaviorConfig, $name, $this );
+		return $this->behaviors[$name] = $behavior;
+    }
+    
+    public function detachBehavior ( $name )
+    {
+        $behavior = $this->behaviors[$name];
+        unset ( $this->behaviors[$name] );
+		return  $behavior;
+    }
+    
+    public function __call ( $name, $parameters )
+	{
+		if( $this->behaviors !== null )
+		{
+			foreach ( $this->behaviors as $object )
+			{
+				if ( method_exists ( $object, $name ) )
+					return call_user_func_array ( [ $object, $name ], $parameters );
+			}
+		}
+//		if(class_exists('Closure', false) && ($this->canGetProperty($name) || property_exists($this, $name)) && $this->$name instanceof Closure)
+//			return call_user_func_array($this->$name, $parameters);
+		throw new CmsException ( "Класс " . get_class ( $this ) . " и его поведения не имеют метода $name" );
+	}
 
 
 }

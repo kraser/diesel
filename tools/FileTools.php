@@ -57,7 +57,7 @@ class FileTools
     public static function createDir ( $dirName )
     {
         if ( !file_exists ( $dirName ) )
-            mkdir ( $dirName, 0777 );
+            mkdir ( $dirName, 0777, true );
     }
 
     /**
@@ -67,25 +67,25 @@ class FileTools
      * @param Boolean $remove <p>Флаг удаления источника</p>
      * @return void
      */
-    public static function copyFile ( $source, $destination, $remove = true )
+    public static function copyFile ( $source, $destination, $remove = false )
     {
         if ( $source == $destination || !file_exists ( $source ) )
             return;
 
         if ( file_exists ( $destination ) )
         {
-            $hashSource = md5 ( file_get_contents ( $source ) );
-            $hashDestination = md5 ( file_get_contents ( $destination ) );
+            $hashSource = md5_file ( $source );
+            $hashDestination = md5_file ( $destination );
             if ( $hashDestination == $hashSource )
                 return;
             else
                 self::removeFile ( $destination );
         }
 
-        if ( copy ( $source, $destination ) )
-        {
-            //self::removeFile ( $source );
-        }
+        copy ( $source, $destination );
+
+        if ( $remove )
+            self::removeFile ( $source );
 
         chmod ( $destination, 0777 );
     }

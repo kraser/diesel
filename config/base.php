@@ -3,7 +3,7 @@ $config =
 [
     'title' => 'Diesel',
     'theme' => 'startUp',
-    'adninMail' => '',
+    'adminMail' => '',
     'adminPhone' => '',
 
     "basePath" => __DIR__ . DS . "..",
@@ -21,6 +21,14 @@ $config =
         'show_query_devmode' => false
 
     ],
+    'modules' =>
+    [
+        'Content'
+    ],
+    'moduleBehaviors' =>
+    [
+        'comments' => 'behaviors.Comments'
+    ]
 
 ];
 

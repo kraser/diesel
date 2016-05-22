@@ -614,7 +614,7 @@ class Catalog extends AdminModule
         }
 
         $info = null;
-        $images = new Images();
+        $imager = Starter::app ()->imager;
 
         //Добавление картинки
         if ( !empty ( $_FILES ) )
@@ -623,23 +623,23 @@ class Catalog extends AdminModule
             {
                 $info = "Ошибка - размер файла должен быть меньше " . ini_get ( "upload_max_filesize" );
             }
-            $images->AddImage ( $_FILES['image']['tmp_name'], $moduleName, $id, $_FILES['image']['name'] );
+            $imager->addImage ( $_FILES['image']['tmp_name'], $moduleName, $id, $_FILES['image']['name'] );
         }
 
         //Задание картинки по-умолчанию
         if ( isset ( $_GET['star'] ) )
         {
-            $images->StarImage ( $_GET['star'] );
+            $imager->starImage ( $_GET['star'] );
         }
 
         //Удаление
         if ( isset ( $_GET['del'] ) )
         {
-            $images->DelImage ( $_GET['del'] );
+            $imager->delImage ( $_GET['del'] );
         }
 
         $result = tpl ( 'modules/' . __CLASS__ . '/' . __FUNCTION__, array (
-            'images' => $images->GetImages ( $moduleName, $id ),
+            'images' => $imager->getImages ( $moduleName, $id ),
             'link' => $this->GetLink ( $method ),
             'module' => $moduleName,
             'module_id' => $id,

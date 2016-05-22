@@ -62,9 +62,7 @@ abstract class Authorization
     {
         $user = $checkedUser ? : $this->user;
         if ( !$user )
-        {
             return false;
-        }
 
         if ( $user->authorization )
         {
@@ -75,9 +73,7 @@ abstract class Authorization
                     AND `deleted`='N'", "CmsUser" );
 
             if ( count ( $data ) != 1 )
-            {
                 return false;
-            }
 
             $referUser = array_shift ( $data );
             $authorization = $this->createAuthKey ( $referUser->passwd, $user->hash );
@@ -91,9 +87,7 @@ abstract class Authorization
                 return true;
             }
             else
-            {
                 return false;
-            }
         }
         else if ( $user->login && $user->passwd )
         {
@@ -114,9 +108,7 @@ abstract class Authorization
                 return true;
             }
             else
-            {
                 return false;
-            }
         }
 
         return false;

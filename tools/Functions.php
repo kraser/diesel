@@ -13,13 +13,9 @@ function Paging ( $items, $items_onpage = 3, $count_show_pages = 5 )
     $pages_count = ceil ( $items_count / $items_onpage );
     $toPage = filter_input ( INPUT_GET, 'page', FILTER_SANITIZE_NUMBER_INT );
     if ( isset ( $toPage ) )
-    {
         $page_current = abs ( ( int ) $toPage );
-    }
     else
-    {
         $page_current = 1;
-    }
 
     $items_from = ($page_current - 1) * $items_onpage;
 
@@ -34,14 +30,10 @@ function Paging ( $items, $items_onpage = 3, $count_show_pages = 5 )
         foreach ( $params as $param )
         {
             if ( substr ( strtolower ( $param ), 0, 5 ) != 'page=' )
-            {
                 $arr[] = $param;
-            }
         }
         if ( $arr )
-        {
             $url = implode ( "&", $arr );
-        }
     }
     $url_page = "?" . ($url ? $url . '&' : '') . 'page=';
     $url = $url_page . '1';
@@ -49,22 +41,17 @@ function Paging ( $items, $items_onpage = 3, $count_show_pages = 5 )
     $left = $page_current - 1;
     $right = $pages_count - $page_current;
     if ( $left < floor ( $count_show_pages / 2 ) )
-    {
         $start = 1;
-    }
     else
-    {
         $start = $page_current - floor ( $count_show_pages / 2 );
-    }
+
     $end = $start + $count_show_pages - 1;
     if ( $end > $pages_count )
     {
         $start -= ($end - $pages_count);
         $end = $pages_count;
         if ( $start < 1 )
-        {
             $start = 1;
-        }
     }
 
     $rendered = tpl ( 'parts/paging', array (

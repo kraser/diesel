@@ -13,6 +13,12 @@ class SiteContent extends CmsComponent
     private $docs;
 
     /**
+     * <pre>Массив объектов SiteDoc индексированный по ID</pre>
+     * @var Array Of SiteDoc
+     */
+    private $byId;
+
+    /**
      * <pre>Массив объектов SiteDoc индексированный по parentID</pre>
      * @var Array Of SiteDoc
      */
@@ -40,28 +46,28 @@ class SiteContent extends CmsComponent
         parent::__construct ( $alias, $parent );
 
         $this->docs = $this->find ( array ( "view" => "Y", "deleted" => "N" ) );
-
-        foreach ( $this->docs as $doc )
+        $this->byId = ArrayTools::index ( $this->docs, "id" );
+        foreach ( $this->byId as $doc )
         {
             $doc->docs = [];
             $this->byParent[$doc->parentId][$doc->id] = $doc;
             $this->byModule[$doc->module][$doc->id] = $doc;
             if ( $doc->parentId == 0 )
             {
-                $doc->link = "/$doc->nav";
+                $doc->link = "/" . preg_replace ( '/\\/*/', '', $doc->nav );
                 $this->docTree[$doc->id] = $doc;
             }
             else
             {
-                $parent = $this->docs[$doc->parentId];
+                $parent = $this->byId[$doc->parentId];
                 $moreParent = $parent;
                 $links = array();
                 while ( $moreParent )
                 {
-                    array_unshift($links, $moreParent->nav);
-                    $moreParent = $moreParent->parentId ? $this->docs[$moreParent->parentId] : null;
+                    array_unshift ( $links, $moreParent->nav );
+                    $moreParent = $moreParent->parentId ? $this->byId[$moreParent->parentId] : null;
                 }
-                $doc->link = "/" .implode("/", $links)."/".$doc->nav;
+                $doc->link = "/" . implode ( "/", $links ) . "/" . $doc->nav;
                 $parent->docs[$doc->id] = $doc;
             }
         }
@@ -97,18 +103,14 @@ class SiteContent extends CmsComponent
     private function find ( $params = null )
     {
         if ( !$params )
-        {
             return array ();
-        }
 
         $conditions = array ();
         $orderBy = array ();
         foreach ( $params as $field => $value )
         {
             if ( !$value )
-            {
                 continue;
-            }
 
             switch ( $field )
             {
@@ -143,7 +145,7 @@ class SiteContent extends CmsComponent
                 `nav` AS nav,
                 `name` AS title,
                 `text` AS html,
-                IF(`module`,'Content',`module`) AS module,
+                IF(`module`='','Content',`module`) AS module,
                 `template` AS template,
                 `showmenu` AS showMenu,
                 `show` AS view,
@@ -152,7 +154,7 @@ class SiteContent extends CmsComponent
                 `modified` AS dateModify
             FROM `prefix_content`
             $whereClause ORDER BY `order` ASC";
-        $docs = SqlTools::selectObjects ( $query, "SiteDoc", "id" );
+        $docs = SqlTools::selectObjects ( $query, "SiteDoc" );
 
         return $docs;
     }
@@ -164,16 +166,17 @@ class SiteContent extends CmsComponent
      */
     public function getLinkById ( $id )
     {
-        if ( $id == 0 || !array_key_exists ( $id, $this->docs ) )
+        if ( $id == 0 || !array_key_exists ( $id, $this->byId ) )
             return;
 
-        $link = $this->getLinkById ( $this->docs[$id]->parent ) . '/' . $this->docs[$id]->nav;
+        $link = $this->getLinkById ( $this->byId[$id]->parent ) . '/' . $this->byId[$id]->nav;
         return $link;
     }
 
     function getLinkByModule ( $module )
     {
-        $link = $this->getLinkById ( $this->byModule[$module]->id );
+        $module = ArrayTools::head ( $this->byModule[$module] );
+        $link = $this->getLinkById ( $module->id );
         return $link;
     }
 
@@ -200,9 +203,7 @@ class SiteContent extends CmsComponent
             }
 
             if ( !$clone->parentId )
-            {
                 $siteMap[$clone->id] = $clone;
-            }
         }
         return $siteMap;
     }

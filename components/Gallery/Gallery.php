@@ -20,16 +20,21 @@ class Gallery extends CmsModule
         $this->actions = array
         (
             'siteMap' => array ( 'method' => 'siteMap', 'name' => 'Карта сайта' ),
-            'galery' => array ( 'method' => 'Galery', 'name' => 'Галерея' )
+            'gallery' => array ( 'method' => 'Galery', 'name' => 'Галерея' ),
+            'default' => [ 'method' => 'actionList' ],
+            'view' => [ 'method' => 'actionView' ]
         );
+        $this->model = "Gallery";
+        $this->template = "mainpage";
     }
 
     function Run ()
     {
-        //RSS
-        if ( isset ( $_GET['rss'] ) )
+        $action = $this->createAction ();
+        if ( $action )
         {
-            $this->RSS ();
+            $content = $action->run ();
+            return $content;
         }
 
         $template = $this->currentDocument->template ? basename ( $this->currentDocument->template, '.php' ) : 'page';
@@ -53,81 +58,57 @@ class Gallery extends CmsModule
         }
     }
 
+
+
+    public function startController ( $method, $params )
+    {
+        return $this->$method ( $params );
+    }
+
     private function actionList ()
     {
-        if ( count ( $this->params ) && $this->params[0] == "list" )
-        {
-            array_shift ( $this->params );
-        }
-
-        $sql = "SELECT n.*" . $select
-            . " FROM `prefix_" . $this->table . "` AS n"
-            . $join
-            . " WHERE n.`date` <= NOW() AND n.`deleted` = 'N' AND n.`show` = 'Y' AND n.`alias` = '".$this->params[0]."' ORDER BY id DESC " . $where;
+        $sql = "SELECT n.* FROM `prefix_" . $this->table . "` AS n
+            WHERE n.`deleted` = 'N' AND n.`show` = 'Y'";
         $galleries = SqlTools::selectObjects ( $sql );
-
-        Starter::app ()->headManager->setTitle ( Starter::app ()->title . " - " . $galleries[0]->name);
-
         foreach( $galleries as $gallery )
         {
-            $sql = "SELECT n.*" . $select
-                . " FROM `prefix_images` AS n"
-                . $join
-                . " WHERE n.`module_id` = {$gallery->id} AND `module` = '". __CLASS__ ."' " . $where
-                . " ORDER BY n.`id` DESC";
-            $images = SqlTools::selectObjects ( $sql );
-
-            foreach ( $images as $image )
-            {
-                $newsList[] = array (
-                    'src' => $image->src,
-                    'video' => $image->video,
-                    'title' => $image->title
-                );
-
-                $gal[$gallery->id] = Array(
-                    'title' => $gallery->name,
-                    'src' => $image->src,
-                    'link' => $this->Link ( array (), $gallery->id ),
-                    'total' => '('. sizeof($images). ' шт )'
-                );
-            }
+            $gallery->images = Starter::app ()->imager->getImages( $this->model, $gallery->id );
         }
 
-        if ($this->params[0] == 'videos')
-        {
-            $news_onpage = Tools::getSettings ( __CLASS__, 'onpage'.$this->params[0], 3 );
-            $show_pages = Tools::getSettings ( __CLASS__, 'show_pagenews', 5 );
-            $news_paged = Paging ( $newsList, $news_onpage, $show_pages );
-            $newsList = $news_paged['items'];
-            $paging = $news_paged['rendered'];
-            unset ( $news_paged );
-
-            $vars = array (
-                'name' => $galleries[0]->name,
-                'title' => $galleries[0]->name,
-                'images' => $newsList,
-                'paging' => $paging,
-            );
-        } else {
-            $news_onpage = Tools::getSettings ( __CLASS__, 'onpage'.$this->params[0], 3 );
-            $show_pages = Tools::getSettings ( __CLASS__, 'show_pagenews', 5 );
-            $news_paged = Paging ( $gal, $news_onpage, $show_pages );
-            $gal = $news_paged['items'];
-            $paging = $news_paged['rendered'];
-            unset ( $news_paged );
-
-            $vars = array (
-                'name' => 'Фотогалереи',
-                'title' => 'Фотогалереи',
-                'galleries' => $gal,
-                'paging' => $paging,
-            );
-        }
+//        if ($this->params[0] == 'videos')
+//        {
+//            $news_onpage = Tools::getSettings ( __CLASS__, 'onpage'.$this->params[0], 3 );
+//            $show_pages = Tools::getSettings ( __CLASS__, 'show_pagenews', 5 );
+//            $news_paged = Paging ( $newsList, $news_onpage, $show_pages );
+//            $newsList = $news_paged['items'];
+//            $paging = $news_paged['rendered'];
+//            unset ( $news_paged );
+//
+//            $vars = array (
+//                'name' => $galleries[0]->name,
+//                'title' => $galleries[0]->name,
+//                'images' => $newsList,
+//                'paging' => $paging,
+//            );
+//        } else {
+//            $news_onpage = Tools::getSettings ( __CLASS__, 'onpage'.$this->params[0], 3 );
+//            $show_pages = Tools::getSettings ( __CLASS__, 'show_pagenews', 5 );
+//            $news_paged = Paging ( $gal, $news_onpage, $show_pages );
+//            $gal = $news_paged['items'];
+//            $paging = $news_paged['rendered'];
+//            unset ( $news_paged );
+//
+//            $vars = array (
+//                'name' => 'Фотогалереи',
+//                'title' => 'Фотогалереи',
+//                'galleries' => $gal,
+//                'paging' => $paging,
+//            );
+//        }
 
 
         //$template = $this->current_document['template'] ? basename ( $current_document['template'], '.php' ) : 'page' ;
-
+        return $this->render ('gallery', [ 'galleries' => $galleries ]);
         $content = tpl ( 'modules/' . __CLASS__ . '/'. $this->params[0], $vars );
         return TemplateEngine::view ( 'page', array (
             'title' => $vars['title'],
@@ -141,21 +122,14 @@ class Gallery extends CmsModule
     {
         $path = Starter:: app ()->urlManager->getUriParts ();
 
-        $select = '';
-        $join = '';
-        $where = '';
-
-        $sql = "SELECT n.*" . $select
-                . " FROM `prefix_images` AS n"
-                . $join
-                . " WHERE n.`module_id` = ".end($path)." AND `module` = '". __CLASS__ ."' " . $where
-                . " ORDER BY n.`id` DESC";
+        $sql = "SELECT n.* FROM `prefix_images` AS n
+            WHERE n.`module_id`='".end($path)."' AND `module` = '$this->model' ORDER BY n.`id` ASC";
         $images = SqlTools::selectObjects ( $sql );
 
-        if ( empty ( $images ) )
-        {
-            page404 ();
-        }
+//        if ( empty ( $images ) )
+//        {
+//            page404 ();
+//        }
 
         foreach ( $images as $image )
         {
@@ -179,6 +153,7 @@ class Gallery extends CmsModule
             'paging' => $paging,
         );
 
+        return $this->render ('gallery', $vars);
         $content = tpl ( 'modules/' . __CLASS__ . '/gallery', $vars );
         return TemplateEngine::view ( 'page', array (
             'title' => isset ( $this->seo['title'] ) && !empty ( $this->seo['title'] ) ? $this->seo['title'] : $vars['title'] . ' — ' . Starter::app ()->title,

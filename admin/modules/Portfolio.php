@@ -183,32 +183,27 @@ class Portfolio extends AdminModule
         }
 
         $info = null;
-        $images = new Images();
+        $imager = Starter::app ()->imager;
 
         //Добавление картинки
         if ( !empty ( $_FILES ) )
         {
             if ( $_FILES['image']['error'] == 1 )
-            {
                 $info = "Ошибка - размер файла должен быть меньше " . ini_get ( "upload_max_filesize" );
-            }
-            $images->AddImage ( $_FILES['image']['tmp_name'], __CLASS__, $id, $_FILES['image']['name'] );
+
+            $imager->addImage ( $_FILES['image']['tmp_name'], __CLASS__, $id, $_FILES['image']['name'] );
         }
 
         //Задание картинки по-умолчанию
         if ( isset ( $_GET['star'] ) )
-        {
-            $images->StarImage ( $_GET['star'] );
-        }
+            $imager->starImage ( $_GET['star'] );
 
         //Удаление
         if ( isset ( $_GET['del'] ) )
-        {
-            $images->DelImage ( $_GET['del'] );
-        }
+            $imager->delImage ( $_GET['del'] );
 
         $result = tpl ( 'modules/' . __CLASS__ . '/' . __FUNCTION__, array (
-            'images' => $images->GetImages ( __CLASS__, $id ),
+            'images' => $imager->getImages ( __CLASS__, $id ),
             'link' => $this->GetLink (),
             'module' => __CLASS__,
             'module_id' => $id,
@@ -216,9 +211,7 @@ class Portfolio extends AdminModule
         ) );
 
         if ( $isNoEcho )
-        {
             return $result;
-        }
         else
         {
             echo $result;
@@ -242,7 +235,7 @@ class Portfolio extends AdminModule
         }
 
         $info = null;
-        $images = new Images();
+        $imager = Starter::app ()->imager;
 
         $data = array ();
         $error = false;
@@ -251,21 +244,17 @@ class Portfolio extends AdminModule
         //Добавление картинки
         if ( !empty ( $_POST['add'] ) )
         {
-
-
-
             foreach ( $_FILES as $file )
             {
                 if ( empty ( $file ) )
-                {
                     $data = array ( 'error' => 'Файл не загружен' );
-                }
+
                 if ( $file['error'] == 1 )
                 {
                     $info = "Ошибка - размер файла должен быть меньше " . ini_get ( "upload_max_filesize" );
                     $data = array ( 'error' => 'Ошибка - размер файла должен быть меньше ' . ini_get ( "upload_max_filesize" ) );
                 }
-                $imageId = $images->AddImage ( $file['tmp_name'], __CLASS__, $id, $file['name'] );
+                $imageId = $imager->addImage ( $file['tmp_name'], __CLASS__, $id, $file['name'] );
                 $data = ($imageId === false) ? array ( 'error' => 'Файл не загружен на сервер' ) : array ( 'files' => $files );
 
                 $data = array ( 'success' => 'Запись успешно добавлена!', 'formData' => $_POST );
@@ -281,15 +270,13 @@ class Portfolio extends AdminModule
 
         //Задание картинки по-умолчанию
         if ( isset ( $_GET['star'] ) )
-        {
-            $images->StarImage ( $_GET['star'] );
-        }
+            $imager->starImage ( $_GET['star'] );
 
         //Удаление
         if ( isset ( $_POST['del'] ) )
         {
             // exit('23');
-            $deleted = $images->DelImage ( $_POST['item_id'] );
+            $deleted = $imager->delImage ( $_POST['item_id'] );
             SqlTools::execute ( "DELETE FROM `prefix_portfolio_images` WHERE `image_id`='" . $_POST['item_id'] . "'" );
 
             $data = ($deleted === true) ? array ( 'success' => 'Запись удалена!', 'formData' => $_POST ) : array ( 'error' => 'Ошибка при удалении' );
@@ -332,9 +319,7 @@ class Portfolio extends AdminModule
         ) );
 
         if ( $isNoEcho )
-        {
             return $result;
-        }
         else
         {
             echo $result;

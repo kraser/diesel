@@ -126,7 +126,7 @@ class Order extends CmsModule implements OfficeService
                 $body .= "\r\nЗаказ:\r\n";
                 $body .= $bodyProduct;
                 $body .= "\r\n";
-                $body .= 'К заказу ' . $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ) . ' на сумму ' . str_replace ( "&nbsp;", " ", priceFormat ( $basket->total ) ) . ' ' . plural ( $basket->total, 'рублей', 'рубль', 'рубля' ) . "\n";
+                $body .= 'К заказу ' . $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ) . ' на сумму ' . priceFormat ( $basket->total ) . ' ' . plural ( $basket->total, 'рублей', 'рубль', 'рубля' ) . "\n";
                 $body .= "Способ оплаты: " . $this->paymethods[$order->payment]->name;
                 $mail = array ( 'mail', $toMail, 'noreply@' . $serverName, 'Заказ с сайта ' . $serverName, $body );
                 $messenger->send ( $mail );
@@ -136,7 +136,7 @@ class Order extends CmsModule implements OfficeService
             if ( !empty ( $toSms ) )
             {
                 $smsPhones = explode ( ",", $toSms );
-                $smsMessage = "Заказ $order->id\r\n " . $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ) . ' на сумму ' . str_replace ( "&nbsp;", " ", priceFormat ( $basket->total ) ) . ' ' . plural ( $basket->total, 'рублей', 'рубль', 'рубля' );
+                $smsMessage = "Заказ $order->id\r\n " . $basket->count . ' ' . plural ( $basket->count, 'товаров', 'товар', 'товара' ) . ' на сумму ' . priceFormat ( $basket->total ) . ' ' . plural ( $basket->total, 'рублей', 'рубль', 'рубля' );
                 foreach ( $smsPhones as $smsPhone )
                 {
                     $sms = array ( 'sms', $smsPhone, "Заказ $order->id с сайта " . $serverName, $smsMessage );
@@ -147,11 +147,11 @@ class Order extends CmsModule implements OfficeService
             Starter::app ()->getModule ( "Basket" )->clearBasket ();
             $payNote = $this->payment->initPayment ( $order );
 
-            return TemplateEngine::view ( 'orderPayment', array( 'order' => $order, 'payNote' => $payNote ), __CLASS__ );
+            return array( 'order' => $order, 'payNote' => $payNote );
         }
         else
         {
-            return TemplateEngine::view ( 'order', array
+            return array
             (
                 'basket' => $basket,
                 'paymethods' => $this->paymethods,
@@ -163,7 +163,7 @@ class Order extends CmsModule implements OfficeService
                     'phone' => $order->phone,
                     'adress' => $order->adress,
                 )
-            ), __CLASS__, true );
+            );
         }
     }
 
