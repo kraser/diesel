@@ -53,12 +53,12 @@ class Content extends CmsModule
     {
         if ( !$this->currentDocument )
         {
-            Starter::app ()->headManager->addMetaText ( Tools::getSettings ( "Content", "customMeta", "" ) );//??
+            Starter::app ()->headManager->addMetaText ( Tools::getSettings ( "Content", "customMeta", "" ) );
             return $this->render ( 'mainpage' );
         }
 
-        $this->template = ($this->currentDocument->template ? basename ( $this->currentDocument->template, '.php' ) : 'page');
-        return $this->render ( 'raw', [ 'content' => $this->currentDocument ] );
+        $this->template = ( $this->currentDocument->template ? basename ( $this->currentDocument->template, '.php' ) : $this->template );
+        return $this->render ( 'content', [ 'content' => $this->currentDocument ] );
     }
 
     public function contacts ()
@@ -118,181 +118,16 @@ class Content extends CmsModule
         return tpl ( 'parts/mainmenu', array ( 'menu' => $menu ) );
     }
 
-    public function MyMenu ()
-    {
-        $categories = SqlTools::selectObjects ( "SELECT * FROM `prefix_content` WHERE `deleted`='N' AND `show`='Y' ORDER BY `order`", null, "id" );
-        $categoriesTree = array ();
-        foreach ( $categories as $category )
-        {
-            $category->link = Starter::app ()->content->getLinkById ( $category->id );
-            $category->subCategories = array ();
-            if ( $category->top == 0 )
-                $categoriesTree[$category->id] = $category;
-            else
-            {
-                if ( !array_key_exists ( $category->top, $categories ) )
-                    continue;
-
-                $parentCategory = $categories[$category->top];
-                $parentCategory->subCategories[$category->id] = $category;
-            }
-        }
-        $tree = ArrayTools::index ( $categoriesTree, "id" );
-        $treeids_ = $this->bread ();
-
-        if ( array_key_exists ( 'id', end ( $treeids_ ) ) )
-        {
-            foreach ( $treeids_ as $treeid )
-            {
-                $treeids['id'][] = $treeid['id'];
-            }
-        }
-        else
-            return;
-
-        $publics = array ( $tree[$treeids_[1]['id']] );
-        if ( empty ( $publics[0]->subCategories ) )
-            return;
-
-        $publics = ArrayTools::index ( $publics[0]->subCategories, "id" );
-        $public = TreeUl ( $publics, 0, 'pages', $treeids );
-
-        return $public;
-    }
-
-    function SubMenu ( $id = 0 )
-    {
-        $docsByPath = Starter::app ()->urlManager->getDocsByPath ();
-        if ( count ( $docsByPath ) == 0 )
-            return "";
-
-        if ( $id != 0 )
-            $toppage = Starter::app ()->data->GetDataById ( $this->table, ( int ) $id );
-        else
-        {
-            end ( $docsByPath );
-            prev ( $docsByPath );
-            $toppage = current ( $docsByPath );
-            if ( empty ( $toppage ) )
-                $toppage = $docsByPath[0];
-        }
-
-        $activeSet = false;
-        $menu = array ();
-
-        //Если модуль нам попался невзначай
-        if ( !empty ( $toppage['module'] ) )
-        {
-            if ( class_exists ( $toppage['module'] ) )
-            {
-                $module = Starter::app ()->getModule ( $toppage['module'] );
-                if ( method_exists ( $module, 'IntegrationMenu' ) )
-                {
-                    $menu = $module->IntegrationMenu ();
-                    foreach ( $menu as $i )
-                    {
-                        if ( isset ( $i['active'] ) && $i['active'] )
-                            $activeSet = true;
-                    }
-                    return tpl ( 'parts/submenu', array ( 'menu' => $menu, 'toppage' => $toppage, 'activeSet' => $activeSet ) );
-                }
-            }
-        }
-
-        //Подменю уже просто из контента
-        $pages = Starter::app ()->data->GetData ( $this->table, 'AND `top` = ' . ( int ) $toppage['id'] );
-        foreach ( $pages as $id => $i )
-        {
-            if ( $i['showmenu'] == 'N' )
-                continue;
-            //Отмечаем текущую страницу
-            if ( in_array ( $i['nav'], Starter::app ()->urlManager->linkPath ) )
-            {
-                $i['active'] = true;
-                $activeSet = true;
-            }
-            else
-                $i['active'] = false;
-
-            $i['link'] = Starter::app ()->content->getLinkById ( $i['id'] );
-
-            $menu[] = $i;
-        }
-
-        return tpl ( 'parts/submenu', array ( 'menu' => $menu, 'toppage' => $toppage, 'activeSet' => $activeSet ) );
-    }
-
-    /**
-     * <pre>Формирует массив (модель) "хлебных крошек"</pre>
-     * @return Array <p>Массив "хлебных крошек"</p>
-     */
-    function bread ()
-    {
-        $docsByPath = Starter::app ()->urlManager->docsByPath;
-        if ( empty ( $docsByPath ) )
-            return array ();
-
-        $crumbs = array ();
-        $crumbs[] = array ( 'name' => 'Главная', 'link' => '/', 'id' => '1' );
-        $i = 0;
-        $pc = count ( $docsByPath );
-
-        foreach ( $docsByPath as $crumb )
-        {
-            $crumbs[] = array ( 'name' => $crumb->title, 'link' => Starter::app ()->content->getLinkById ( $crumb->id ), 'id' => $crumb->id );
-            $i++;
-        }
-
-        $last = end ( $docsByPath );
-
-        //А вдруг модуль
-        if ( $last->module !== "Content" )
-        {
-            if ( class_exists ( $last->module ) )
-            {
-                $module = Starter::app ()->getModule ( $last->module );
-                if ( method_exists ( $module, 'breadCrumbs' ) )
-                {
-                    $moduleCrumbs = $module->breadCrumbs ();
-                    $crumbs = array_merge ( $crumbs, $moduleCrumbs );
-                }
-            }
-        }
-
-        $crumbs = array_filter ( $crumbs );
-
-        foreach ( $crumbs as $k => $crumb )
-        {
-            $crumbs[$k]['active'] = false;
-        }
-        $crumbs[count ( $crumbs ) - 1]['active'] = true;
-
-        return $crumbs;
-    }
-
-    /**
-     * <pre>Выводит html текст "хлебных крошек"<pre>
-     * @return String <p>html текст "хлебных крошек"</p>
-     */
-    function breadCrumbs ()
-    {
-        $crumbs = $this->bread ();
-        if ( empty ( $crumbs ) )
-            return '';
-
-        return tpl ( 'parts/breadcrumbs', array ( 'crumbs' => $crumbs ) );
-    }
-
-    function Godmode ()
-    {
-        $suspend = false;
-        if ( $_POST['suspend'] )
-            $suspend = true;
-
-        $_SESSION['godmode_suspended'] = $suspend;
-
-        sendJSON ( array ( 'suspended' => $_SESSION['godmode_suspended'] ) );
-    }
+//    function Godmode ()
+//    {
+//        $suspend = false;
+//        if ( $_POST['suspend'] )
+//            $suspend = true;
+//
+//        $_SESSION['godmode_suspended'] = $suspend;
+//
+//        sendJSON ( array ( 'suspended' => $_SESSION['godmode_suspended'] ) );
+//    }
 
     /**
      * Получение дерева меню
@@ -300,193 +135,193 @@ class Content extends CmsModule
      * @param type $id
      * @return type
      */
-    function Tree ( $categories, $id = 0 )
-    {
-        foreach ( $categories as $category )
-        {
-            $category->link = Starter::app ()->content->getLinkById ( $category->id );
-            $category->subCategories = array ();
-            if ( in_array ( $category->nav, Starter::app ()->urlManager->linkPath ) )
-            {
-                $category->active = true;
-                $activeSet = true;
-            }
-            else
-                $category->active = false;
-
-            $subcategories = ArrayTools::index ( SqlTools::selectObjects ( "SELECT * FROM `prefix_content` WHERE `top`='" . $category->id . "' AND `show`='Y' AND `deleted`='N' ORDER BY `order`" ), "id" );
-            if ( $subcategories )
-            {
-                $category->subCategories = $subcategories;
-                $this->Tree ( $subcategories, $category->id );
-            }
-        }
-        return ( $categories );
-    }
-
-    function Menu ( $template = 'mainmenu' )
-    {
-        $select = '';
-        $join = '';
-        $where = '';
-//        if ( _REGION !== null )
+//    function Tree ( $categories, $id = 0 )
+//    {
+//        foreach ( $categories as $category )
 //        {
-//            $select .= ', r.`id` AS `region`';
-//            $join .= " LEFT JOIN `prefix_module_to_region` AS m2r ON (c.`id` = m2r.`module_id` AND m2r.`module` = '" . __CLASS__ . "')"
-//                . " LEFT JOIN `prefix_regions` AS r ON (m2r.`region_id` = r.`id`)";
-//            $where .= " AND (r.`id` IS NULL OR (r.`id` = '" . _REGION . "' AND r.`show` = 'Y' AND r.`deleted` = 'N'))";
+//            $category->link = Starter::app ()->content->getLinkById ( $category->id );
+//            $category->subCategories = array ();
+//            if ( in_array ( $category->nav, Starter::app ()->urlManager->linkPath ) )
+//            {
+//                $category->active = true;
+//                $activeSet = true;
+//            }
+//            else
+//                $category->active = false;
+//
+//            $subcategories = ArrayTools::index ( SqlTools::selectObjects ( "SELECT * FROM `prefix_content` WHERE `top`='" . $category->id . "' AND `show`='Y' AND `deleted`='N' ORDER BY `order`" ), "id" );
+//            if ( $subcategories )
+//            {
+//                $category->subCategories = $subcategories;
+//                $this->Tree ( $subcategories, $category->id );
+//            }
 //        }
+//        return ( $categories );
+//    }
 
-        $sql = "SELECT c.*" . $select
-            . " FROM `prefix_" . $this->table . "` AS c"
-            . $join
-            . " WHERE c.`deleted` = 'N' AND c.`show` = 'Y'" . $where
-            . " ORDER BY c.`order`, c.`name`";
+//    function Menu ( $template = 'mainmenu' )
+//    {
+//        $select = '';
+//        $join = '';
+//        $where = '';
+////        if ( _REGION !== null )
+////        {
+////            $select .= ', r.`id` AS `region`';
+////            $join .= " LEFT JOIN `prefix_module_to_region` AS m2r ON (c.`id` = m2r.`module_id` AND m2r.`module` = '" . __CLASS__ . "')"
+////                . " LEFT JOIN `prefix_regions` AS r ON (m2r.`region_id` = r.`id`)";
+////            $where .= " AND (r.`id` IS NULL OR (r.`id` = '" . _REGION . "' AND r.`show` = 'Y' AND r.`deleted` = 'N'))";
+////        }
+//
+//        $sql = "SELECT c.*" . $select
+//            . " FROM `prefix_" . $this->table . "` AS c"
+//            . $join
+//            . " WHERE c.`deleted` = 'N' AND c.`show` = 'Y'" . $where
+//            . " ORDER BY c.`order`, c.`name`";
+//
+//        $pages = SqlTools::selectRows ( $sql, MYSQL_ASSOC );
+//
+//        $menuByTop = array ();
+//        $activeSet = false;
+//        foreach ( $pages as $id => $i )
+//        {
+//            if ( $i['showmenu'] == 'N' )
+//                continue;
+//            //Отмечаем текущую страницу
+//            if ( in_array ( $i['nav'], Starter::app ()->urlManager->linkPath ) )
+//            {
+//                $i['active'] = true;
+//                $activeSet = true;
+//            }
+//            else
+//                $i['active'] = false;
+//
+//            $menuByTop[$i['top']][] = $i;
+//        }
+//
+//        if ( empty ( $menuByTop[0] ) )
+//            return tpl ( 'parts/' . $template, array ( 'menu' => array () ) );
+//
+//        //if(!$activeSet) $menuByTop[0][0]['active'] = true;
+//
+//        foreach ( $menuByTop[0] as $top => $i )
+//        {
+//            $item['root'] = $i;
+//            $item['sub'] = array ();
+//
+//            //Проверка на подменю из модуля
+//            if ( !empty ( $i['module'] ) && $i['active'] )
+//            {
+//                $obj = Starter::app ()->getModule ( $i['module'] );
+//                if ( method_exists ( $obj, 'SubMenu' ) )
+//                    $item['sub'] = $obj->SubMenu ();
+//            }
+//            else
+//            {
+//                if ( isset ( $menuByTop[$i['id']] ) )
+//                {
+//                    foreach ( $menuByTop[$i['id']] as $id => $j )
+//                    {
+//                        $item['sub'][] = $j;
+//                    }
+//                }
+//            }
+//
+//            $menu[] = $item;
+//        }
+//        return tpl ( 'parts/' . $template, array ( 'menu' => $menu ) );
+//    }
+//
+//    function getMenuTree ()
+//    {
+//        $categories = ArrayTools::index ( SqlTools::selectObjects ( "SELECT * FROM `prefix_content` WHERE `top`='0' AND `show`='Y' AND `deleted`='N' ORDER BY `order`" ), "id" );
+//        $tree = ArrayTools::index ( $this->Tree ( $categories ), "id" );
+//        //print_r ( $tree );
+//        $treeids_ = $this->bread ();
+//
+//        $treeids = Array ();
+//        if ( $treeids_ )
+//        {
+//            if ( array_key_exists ( 'id', end ( $treeids_ ) ) )
+//            {
+//                foreach ( $treeids_ as $treeid )
+//                {
+//                    $treeids['id'][] = $treeid['id'];
+//                }
+//            }
+//            else
+//                $treeids['id'] = 0;
+//        }
+//        else
+//            $treeids['id'] = 0;
+//
+//        $public = $this->TreeHtml ( $tree, 0, 'menu', $treeids );
+//
+//        print_r ( $public );
+//    }
 
-        $pages = SqlTools::selectRows ( $sql, MYSQL_ASSOC );
-
-        $menuByTop = array ();
-        $activeSet = false;
-        foreach ( $pages as $id => $i )
-        {
-            if ( $i['showmenu'] == 'N' )
-                continue;
-            //Отмечаем текущую страницу
-            if ( in_array ( $i['nav'], Starter::app ()->urlManager->linkPath ) )
-            {
-                $i['active'] = true;
-                $activeSet = true;
-            }
-            else
-                $i['active'] = false;
-
-            $menuByTop[$i['top']][] = $i;
-        }
-
-        if ( empty ( $menuByTop[0] ) )
-            return tpl ( 'parts/' . $template, array ( 'menu' => array () ) );
-
-        //if(!$activeSet) $menuByTop[0][0]['active'] = true;
-
-        foreach ( $menuByTop[0] as $top => $i )
-        {
-            $item['root'] = $i;
-            $item['sub'] = array ();
-
-            //Проверка на подменю из модуля
-            if ( !empty ( $i['module'] ) && $i['active'] )
-            {
-                $obj = Starter::app ()->getModule ( $i['module'] );
-                if ( method_exists ( $obj, 'SubMenu' ) )
-                    $item['sub'] = $obj->SubMenu ();
-            }
-            else
-            {
-                if ( isset ( $menuByTop[$i['id']] ) )
-                {
-                    foreach ( $menuByTop[$i['id']] as $id => $j )
-                    {
-                        $item['sub'][] = $j;
-                    }
-                }
-            }
-
-            $menu[] = $item;
-        }
-        return tpl ( 'parts/' . $template, array ( 'menu' => $menu ) );
-    }
-
-    function getMenuTree ()
-    {
-        $categories = ArrayTools::index ( SqlTools::selectObjects ( "SELECT * FROM `prefix_content` WHERE `top`='0' AND `show`='Y' AND `deleted`='N' ORDER BY `order`" ), "id" );
-        $tree = ArrayTools::index ( $this->Tree ( $categories ), "id" );
-        //print_r ( $tree );
-        $treeids_ = $this->bread ();
-
-        $treeids = Array ();
-        if ( $treeids_ )
-        {
-            if ( array_key_exists ( 'id', end ( $treeids_ ) ) )
-            {
-                foreach ( $treeids_ as $treeid )
-                {
-                    $treeids['id'][] = $treeid['id'];
-                }
-            }
-            else
-                $treeids['id'] = 0;
-        }
-        else
-            $treeids['id'] = 0;
-
-        $public = $this->TreeHtml ( $tree, 0, 'menu', $treeids );
-
-        print_r ( $public );
-    }
-
-    function TreeHtml ( $root, $level, $Class, $tree, $idd = '' )
-    {
-        $html = "";
-        $class = "level" . $level;
-        $menu_count = count ( $root );
-        $i = 1;
-        if ( $level >= 1 )
-        {
-            $categoryClass = "sub_" . $Class . "_list";
-            $id = "id='sub_" . $Class . "_List" . $idd . "'";
-
-
-            if ( ($level) < count ( $tree['id'] ) )
-            {
-                if ( ($idd) && $idd == $tree['id'][$level] )
-                    $style = "style='display: block;'";
-                else
-                    $style = "style='display: none;'";
-            }
-            else
-                $style = "style='display: none;'";
-        }
-        else
-        {
-            $categoryClass = "index_" . $Class . "_list";
-            $id = "id='index_" . $Class . "_List'";
-            $style = "";
-        }
-        $html .= "<ul " . $id . " class='$categoryClass' " . $style . ">";
-        foreach ( $root as $branch )
-        {
-            if ( $branch->active )
-                $active = 'active';
-            else
-                $active = '';
-
-            if ( $i == $menu_count )
-            {
-                if ( count ( $branch->subCategories ) )
-                {
-                    $html .= "<li class='sub_item' id='sub_item_id_" . $branch->id . "'><a class='hide'>" . $branch->name . "</a><div class='stripe-next'></div>";
-                    $html .= $this->TreeHtml ( $branch->subCategories, $level + 1, $Class, $tree, $branch->id );
-                    $html .= "</li>";
-                }
-                else
-                    $html .= "<li class='sub_item'><a class='" . $active . "' href='" . $branch->link . "'>" . $branch->name . "</a></li>";
-            }
-            else
-            {
-                if ( count ( $branch->subCategories ) )
-                {
-                    $html .= "<li class='sub_item' id='sub_item_id_" . $branch->id . "'><a class='hide'>" . $branch->name . "</a><div class='stripe-next'></div>";
-                    $html .= $this->TreeHtml ( $branch->subCategories, $level + 1, $Class, $tree, $branch->id );
-                    $html .= "</li>";
-                }
-                else
-                    $html .= "<li class='sub_item'><a class='" . $active . "' href='" . $branch->link . "'>" . $branch->name . "</a></li>";
-            }
-            $i++;
-        }
-        $html .= "</ul>";
-        return $html;
-    }
+//    function TreeHtml ( $root, $level, $Class, $tree, $idd = '' )
+//    {
+//        $html = "";
+//        $class = "level" . $level;
+//        $menu_count = count ( $root );
+//        $i = 1;
+//        if ( $level >= 1 )
+//        {
+//            $categoryClass = "sub_" . $Class . "_list";
+//            $id = "id='sub_" . $Class . "_List" . $idd . "'";
+//
+//
+//            if ( ($level) < count ( $tree['id'] ) )
+//            {
+//                if ( ($idd) && $idd == $tree['id'][$level] )
+//                    $style = "style='display: block;'";
+//                else
+//                    $style = "style='display: none;'";
+//            }
+//            else
+//                $style = "style='display: none;'";
+//        }
+//        else
+//        {
+//            $categoryClass = "index_" . $Class . "_list";
+//            $id = "id='index_" . $Class . "_List'";
+//            $style = "";
+//        }
+//        $html .= "<ul " . $id . " class='$categoryClass' " . $style . ">";
+//        foreach ( $root as $branch )
+//        {
+//            if ( $branch->active )
+//                $active = 'active';
+//            else
+//                $active = '';
+//
+//            if ( $i == $menu_count )
+//            {
+//                if ( count ( $branch->subCategories ) )
+//                {
+//                    $html .= "<li class='sub_item' id='sub_item_id_" . $branch->id . "'><a class='hide'>" . $branch->name . "</a><div class='stripe-next'></div>";
+//                    $html .= $this->TreeHtml ( $branch->subCategories, $level + 1, $Class, $tree, $branch->id );
+//                    $html .= "</li>";
+//                }
+//                else
+//                    $html .= "<li class='sub_item'><a class='" . $active . "' href='" . $branch->link . "'>" . $branch->name . "</a></li>";
+//            }
+//            else
+//            {
+//                if ( count ( $branch->subCategories ) )
+//                {
+//                    $html .= "<li class='sub_item' id='sub_item_id_" . $branch->id . "'><a class='hide'>" . $branch->name . "</a><div class='stripe-next'></div>";
+//                    $html .= $this->TreeHtml ( $branch->subCategories, $level + 1, $Class, $tree, $branch->id );
+//                    $html .= "</li>";
+//                }
+//                else
+//                    $html .= "<li class='sub_item'><a class='" . $active . "' href='" . $branch->link . "'>" . $branch->name . "</a></li>";
+//            }
+//            $i++;
+//        }
+//        $html .= "</ul>";
+//        return $html;
+//    }
 
     public function sendForm ( $params )
     {

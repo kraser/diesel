@@ -281,7 +281,7 @@ class Imager extends CmsComponent
                 mkdir ( $pathDestianation['dirname'], 0777, true );
 
             if ( $bckg )
-                $command = "-resize " . $width . "x" . $height . " -size " . $width . "x" . $height . " xc:$bckg +swap -gravity center  -composite $pathToFile";
+                $command = "-resize " . $width . "x" . $height . " -size " . $width . "x" . $height . " xc:$bckg +swap -gravity center -quality 80 -composite $pathToFile";
             else
                 $command = "-resize " . $width . "x" . $height . " $pathToFile";
             system ( "convert $fileSrc $command" );
