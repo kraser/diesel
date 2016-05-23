@@ -407,20 +407,20 @@ class Catalog extends CmsModule
         }
         $parent = ArrayTools::head($this->findCategories(["id"=>$this->parentCategories]));
 //        Подобная продукция КофеПресс
-//        $similar = $this->findProducts( ["top"=>$product->top, 'show'=>'Y', 'deleted'=>'N'], "p.id!=$product->id" );
-//        $count = count ($similar);
-//        $newSim = [];
-//        $i = 0;
-//        while ( $i < 3 )
-//        {
-//            $key = rand(0,$count-1);
-//            if (!array_key_exists ($key,$newSim))
-//            {
-//                $newSim[$key] = $similar[$key];
-//                $i++;
-//            }
-//        }
-        return $this->render ("productCard", array ( "product" => $product, "parent" => $parent/*, 'similar' => $newSim*/ ));
+        $similar = $this->findProducts( ["top"=>$product->top, 'show'=>'Y', 'deleted'=>'N'], "p.id!=$product->id" );
+        $count = count ($similar);
+        $newSim = [];
+        $i = 0;
+        while ( $i < 3 )
+        {
+            $key = rand(0,$count-1);
+            if (!array_key_exists ($key,$newSim))
+            {
+                $newSim[$key] = $similar[$key];
+                $i++;
+            }
+        }
+        return $this->render ("productCard", array ( "product" => $product, "parent" => $parent, 'similar' => $newSim ));
     }
 
     /**
