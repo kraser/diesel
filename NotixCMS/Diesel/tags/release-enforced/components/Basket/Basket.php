@@ -173,7 +173,7 @@ class Basket extends CmsModule
     {
         $count = filter_input ( INPUT_POST, "quantity", FILTER_SANITIZE_NUMBER_INT );
         $basketId = filter_input ( INPUT_POST, "basketId", FILTER_SANITIZE_STRING );
-        
+
         $error = true;
         if ( isset ( $basketId ) && $count > 0 )
             $result = $this->actionEditBasket ( $basketId, $count );
@@ -249,11 +249,12 @@ class Basket extends CmsModule
         $productsId = ArrayTools::numberList ( $items );
         $images = Starter::app ()->imager->getMainImages ( "Catalog", $items );
         if ( $productsId )
-            $names = SqlTools::selectObjects ( "SELECT `id`, `name`, `top` FROM `prefix_products` WHERE `id` IN ($productsId)", null, "id" );
+            $names = SqlTools::selectObjects ( "SELECT `id`, `name`, `top`, `unit` FROM `prefix_products` WHERE `id` IN ($productsId)", null, "id" );
         foreach ( $basket->products as $basketItem )
         {
             $basketItem->name = $names[$basketItem->productId]->name;
             $basketItem->top = $names[$basketItem->productId]->top;
+            $basketItem->unit = $names[$basketItem->productId]->unit;
             $basketItem->image = $images[$basketItem->productId];
             $count += $basketItem->quantity;
             $basketItem->total = $basketItem->price * $basketItem->quantity;
@@ -543,6 +544,11 @@ class BasketItem
      * @var Float
      */
     public $price;
+    /**
+     * <p>Единица измерения</p>
+     * @var String
+     */
+    public $unit;
     /**
      * <p>Суммарная стоимость товара</p>
      * @var Integer
