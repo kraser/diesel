@@ -872,7 +872,7 @@ class Catalog extends CmsModule
         if ( count ( $params ) )
         {
             $conditions = array ();
-            $orderBy = array ();
+            $orderBy = [ "p.`order` ASC" ];
             $limit = "";
             foreach ( $params as $field => $value )
             {
