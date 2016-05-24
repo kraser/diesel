@@ -25,18 +25,23 @@ class Site extends CmsApplication
     public function Run ()
     {
         $moduleName = Starter::app()->urlManager->getRoute ();
-        $module = Starter:: app ()->getModule ( $moduleName );
-        $html = $module->Run ();
-        header ( "Content-Type: text/html; " . _CHARSET );
-        ob_start ( "ob_gzhandler" );
-        echo $html;
-        ob_end_flush ();
-        /* super god-mode check */
-        if ( Tools::getSettings ( 'Blocks', 'godmode_suspended', true ) == true && array_key_exists ( "admin", $_SESSION ) && $_SESSION['admin']['type'] == 'a' )
+        if ( !$moduleName)
+            page404 ();
+        else
         {
-            $bGodmodeSuspended = array_key_exists ( 'godmode_suspended', $_SESSION ) && $_SESSION['godmode_suspended'] ? 'true' : ' false';
-            echo '<script type="text/javascript">var g_bGodmode = true; g_bGodmodeSuspended = ' . $bGodmodeSuspended . '</script>';
-            echo '<script type="text/javascript" src="/js/godmode.js"></script>';
+            $module = Starter:: app ()->getModule ( $moduleName );
+            $html = $module->Run ();
+            header ( "Content-Type: text/html; " . _CHARSET );
+            ob_start ( "ob_gzhandler" );
+            echo $html;
+            ob_end_flush ();
+            /* super god-mode check */
+            if ( Tools::getSettings ( 'Blocks', 'godmode_suspended', true ) == true && array_key_exists ( "admin", $_SESSION ) && $_SESSION['admin']['type'] == 'a' )
+            {
+                $bGodmodeSuspended = array_key_exists ( 'godmode_suspended', $_SESSION ) && $_SESSION['godmode_suspended'] ? 'true' : ' false';
+                echo '<script type="text/javascript">var g_bGodmode = true; g_bGodmodeSuspended = ' . $bGodmodeSuspended . '</script>';
+                echo '<script type="text/javascript" src="/js/godmode.js"></script>';
+            }
         }
     }
 }
