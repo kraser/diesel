@@ -97,4 +97,10 @@ class Admin extends CmsApplication
             exit;
         }
     }
+    /*Костыль*/
+    public function getModule ( $id )
+    {
+        $module = new $id();
+        return $module;
+    }
 }
