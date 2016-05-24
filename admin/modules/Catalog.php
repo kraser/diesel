@@ -76,6 +76,7 @@ class Catalog extends AdminModule
                         'length' => '1-128',
                         'link' => $this->GetLink ( "productTagsValues", array ( 'top' => '{id}', 'cat' => $_GET['top'] ) ),
                     ),
+                    'order' => array ( 'name' => 'Порядок', 'class' => 'min' ),
                     'shortName' => array ( 'name' => 'Артикул', 'length' => '0-64' ),
                     'nav' => array
                     (
