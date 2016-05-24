@@ -1078,4 +1078,99 @@ class Catalog extends AdminModule
 
         return $hasSub > 0;
     }
+    /*Костыль*/
+    public function getModuleMap ()
+    {
+        $whereClause = "WHERE `deleted`='N' AND `show`='Y'";
+
+        $categoryQuery = "
+            SELECT
+                t.`id` AS id,
+                t.`top` AS parentId,
+                t.`order` AS 'order',
+                t.`nav` AS nav,
+                t.`name` AS title,
+                t.`show` AS view,
+                t.`deleted` AS deleted
+            FROM `prefix_products_topics` t
+            $whereClause
+            ORDER BY `order` ASC
+            ";
+        $categories = SqlTools::selectObjects ( $categoryQuery, "CmsSiteDoc", "id" );
+
+        $productQuery = "
+            SELECT
+                p.`id` AS id,
+                p.`top` AS parentId,
+                p.`order` AS 'order',
+                p.`nav` AS nav,
+                p.`name` AS title,
+                p.`show` AS view,
+                p.`deleted` AS deleted
+            FROM `prefix_products` AS p
+            $whereClause
+            ORDER BY `order`";
+
+        $products = SqlTools::selectObjects ( $productQuery, "CmsSiteDoc", "id" );
+        foreach ( $products as $product )
+        {
+            $product->link = $this->Link ( $product->parentId, $product->id );
+        }
+
+        $docsTree = array ();
+        foreach ( $categories as $doc )
+        {
+            $doc->link = $this->Link ( $doc->id );
+            $doc->children = ArrayTools::select ( $products, "parentId", $doc->id );
+            if ( $doc->parentId == 0 )
+            {
+                $docsTree[$doc->id] = $doc;
+            }
+            else
+            {
+                if ( !array_key_exists ( $doc->parentId, $categories ) )
+                    continue;
+                $parentDoc = $categories[$doc->parentId];
+                $parentDoc->docs[$doc->id] = $doc;
+            }
+        }
+
+        return $docsTree;
+    }
+
+    public function Link ( $topicId = 0, $productId = 0 )
+    {
+        $topicId = ( int ) $topicId;
+        $productId = ( int ) $productId;
+
+        if ( $topicId != 0 || $productId != 0 )
+        {
+            if ( $productId != 0 )
+            {
+                $product = ArrayTools::head ( SqlTools::selectObjects ( "SELECT `id`, `top`, `nav` FROM `prefix_products` WHERE `id`=$productId" ) );
+                $productLink = "/" . ( $product->nav ? : $product->id );
+                $topicId = $product->top;
+            }
+            else
+            {
+                $productLink = "";
+            }
+
+//            $parents = Tools::getParentCategories ( $topicId );
+//            array_shift ( $parents );
+//            $parents = array_reverse ( $parents );
+            $parents[] = $topicId;
+            $topics = SqlTools::selectObjects ( "SELECT `id`, `top`, `nav` FROM `prefix_products_topics` WHERE `id` IN (" . ArrayTools::numberList ( $parents ) . ")", null, "id" );
+            $topicsLinkChain = array ();
+            foreach ( $parents as $id )
+            {
+                $topic = $topics[$id];
+                $topicsLinkChain[] = $topic->nav ? : $topic->id;
+            }
+            $topicsLink = implode ( "/", $topicsLinkChain );
+
+            $url = "/$topicsLink" . $productLink;
+        }
+        return Starter::app ()->content->getLinkByModule ( __CLASS__ ) . $url;
+    }
 }

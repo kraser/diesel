@@ -5,6 +5,58 @@ class Content extends AdminModule
     const name = 'Страницы и содержание';
     const order = 1;
     const icon = 'file-text-o';
+    public $submenu = array
+    (
+        'Info' => '<i class="glyph-icon icon-tasks"></i>&nbsp;Страницы и содержание',
+        'siteMap' => '<i class="glyph-icon icon-tasks"></i>&nbsp;Карта сайта'
+    );
+
+    public function siteMap ()
+    {
+        $siteMap = Starter::app ()->content->getSiteMap ();Tools::dump($siteMap);
+        $domain = "http://" . $_SERVER['HTTP_HOST'];
+        $siteMapXml = "/sitemap.xml";
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
+    <url>";
+        $xml .= $this->parseSiteMap ( $siteMap, $domain );
+        $xml .= "
+    </url>
+</urlset>
+";
+        file_put_contents ( DOCROOT . $siteMapXml, $xml );
+        if ( is_file ( DOCROOT . $siteMapXml ) )
+        {
+            if ( is_writable ( DOCROOT . $siteMapXml ) )
+            {
+                if ( file_put_contents ( DOCROOT . $siteMapXml, $xml ) )
+                    $this->content = 'Файл ' . $siteMapXml . ' успешно обновлен.';
+                else
+                    $this->content = 'Неизвестная ошибка записи';
+            }
+            else
+                $this->content = 'Невозможно записать файл ' . $siteMapXml . ', нет прав! Попробуйте создать его самостоятельно и назначьте права 0777.';
+        }
+
+    }
+
+    public function parseSiteMap ( $siteMap, $domain )
+    {
+        $xml = "";
+        foreach ( $siteMap as $doc )
+        {
+            $url = $domain . $doc->link;
+            $xml .= "
+        <loc>$url</loc>";
+            if ( $doc->docs && count ( $doc->docs ) )
+                $xml .= $this->parseSiteMap ( $doc->docs, $domain );
+
+            if ( $doc->children && count ( $doc->children ) )
+                $xml .= $this->parseSiteMap ( $doc->children, $domain );
+        }
+
+        return $xml;
+    }
 
     function Info ()
     {
