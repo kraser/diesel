@@ -35,8 +35,7 @@ class Slider extends CmsModule
                     break;
                 }
             }
-            // в поле text вводятся строки, разделённые переносом строки ("\n"),
-            // преобразуем их в массив для дальнейшего окружения тегами <li> в шаблоне
+
             $slideList[] = array
             (
                 'name' => $slide->name,
