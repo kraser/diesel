@@ -77,41 +77,50 @@ class Slider extends AdminModule
     function Info ()
     {
         $this->title = 'Слайдер';
-        $_GET['orderd'] = 'DESC';
-        $this->content = $this->DataTable (
-            'slider', array (
+        $this->content = $this->DataTable ( 'slider',
+        [
             //Имена системных полей
-            'nouns' => array (
-                'id' => 'id', // INT
-                'name' => 'name', // VARCHAR
-                'deleted' => 'deleted', // ENUM(Y,N)
-                'created' => 'created', // DATETIME
-                'modified' => 'modified', // DATETIME
-                'text' => 'text', // TEXT
-            ),
+            'nouns' =>
+            [
+                'id' => 'id',
+                'name' => 'name',
+                'deleted' => 'deleted',
+                'created' => 'created',
+                'modified' => 'modified',
+                'text' => 'text',
+            ],
             //Отображение контролов
-            'controls' => array (
+            'controls' =>
+            [
                 'add',
                 'edit',
-                'no_edit_text', // такой флаг означает, что не будет выводиться контрол редактирования поля text редактором tinyMCE
+                'no_edit_text',// флаг означает, что не будет выводиться контрол редактирования поля text редактором tinyMCE
                 'del'
-            ),
+            ],
             //Табы (методы этого класса)
-            'tabs' => array (
-                'Images' => 'Изображения'/*,
-                '_Regions' => 'Регионы',*/
-            )
-            ), array (
-            'id' => array ( 'name' => '№', 'class' => 'min' ),
-            'name' => array ( 'name' => 'Заголовок', 'length' => '0-200' ),
-            'text' => array ( 'name' => 'Строки текста', 'length' => '0-500', 'edit_text' => true ),
-            'show' => array ( 'name' => 'Показывать', 'class' => 'min' ),
-            'link' => array ( 'name' => 'Ссылка (вида http://... - из адресной строки)', 'length' => '0-200', 'hide_from_table' => true ),
-            'date' => array ( 'name' => 'Дата создания', 'transform' => function($str)
-                {
-                    return DatetimeTools::inclinedDate ( $str );
-                } )
-            ), '', 'date' );
+            'tabs' =>
+            [
+                'Images' => 'Изображения'
+            ]
+        ],
+        [
+            'id' => [ 'name' => '№', 'class' => 'min' ],
+            'order' =>
+            [
+                'name' => 'Порядковый номер',
+                'length' => '0-200',
+                'regex' => '/^[\d]+$/i',
+                'regex_error' => 'Порядковый номер может быть только числом'
+            ],
+            'name' => [ 'name' => 'Заголовок', 'length' => '0-200' ],
+            'text' => [ 'name' => 'Строки текста', 'length' => '0-1500', 'edit_text' => true ],
+            'show' => [ 'name' => 'Показывать', 'class' => 'min' ],
+            'link' => [ 'name' => 'Ссылка', 'length' => '0-200', 'hide_from_table' => true ],
+            'date' => [ 'name' => 'Дата создания', 'transform' => function($str)
+            {
+                return DatetimeTools::inclinedDate ( $str );
+            } ]
+        ], '', 'order' );
 
         $this->hint['text'] = 'Вы можете добавить заголовок, изображение или изменить строки текста в свойствах <img src="/admin/images/icons/pencil.png" style="vertival-align:middle" />';
     }

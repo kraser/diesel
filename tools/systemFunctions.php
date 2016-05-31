@@ -68,19 +68,19 @@ function block ( $id, $return = false )
 
     $godmode_suspended = Tools::getSettings ( 'Blocks', 'godmode_suspended', true );
     $bool = ($godmode_suspended == 'true');
-    if ( isset ( $_SESSION['admin']['type'] ) && $bool )
-    {
-        $is_admin = ($_SESSION['admin']['type'] == 'a');
-        if ( $is_admin && @!$_SESSION['godmode_suspended'] )
-        {
-            // Если html содержимое
-            if ( mb_strlen ( strip_tags ( $block['text'] ) ) != mb_strlen ( $block['text'] ) )
-                $edit_block_link = '/admin/?module=Blocks&method=Info&edit_text=' . $block['id'];
-            else
-                $edit_block_link = '/admin/?module=Blocks#open' . $block['id'];
-            $block['text'] = '<div style="border:dashed 1px grey; position:relative;">' . $block['text'] . '<a target="_blank" style="position:absolute; top:0; right:-8px; z-index:100;" href="' . $edit_block_link . '" title="Редактировать"><img src="/admin/images/icons/pencil.png" alt="Редактировать" /></a></div>';
-        }
-    }
+//    if ( isset ( $_SESSION['admin']['type'] ) && $bool )
+//    {
+//        $is_admin = ($_SESSION['admin']['type'] == 'a');
+//        if ( $is_admin && @!$_SESSION['godmode_suspended'] )
+//        {
+//            // Если html содержимое
+//            if ( mb_strlen ( strip_tags ( $block['text'] ) ) != mb_strlen ( $block['text'] ) )
+//                $edit_block_link = '/admin/?module=Blocks&method=Info&edit_text=' . $block['id'];
+//            else
+//                $edit_block_link = '/admin/?module=Blocks#open' . $block['id'];
+//            $block['text'] = '<div style="border:dashed 1px grey; position:relative;">' . $block['text'] . '<a target="_blank" style="position:absolute; top:0; right:-8px; z-index:100;" href="' . $edit_block_link . '" title="Редактировать"><img src="/admin/images/icons/pencil.png" alt="Редактировать" /></a></div>';
+//        }
+//    }
 
     if ( $block['show'] == 'Y' )
     {
@@ -91,6 +91,20 @@ function block ( $id, $return = false )
     }
     else
         return false;
+}
+
+function getBlock ( $id )
+{
+    if ( is_numeric ( $id) )
+        $whereClause = "`id`=$id";
+    else
+        $whereClause = "`callname`='$id'";
+
+    $sql = "SELECT * FROM `prefix_blocks`
+        WHERE `deleted`='N' AND `show`='Y' AND " . $whereClause;
+
+    $block = SqlTools::selectObject ( $sql );
+    return $block;
 }
 
 /**

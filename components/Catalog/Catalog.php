@@ -354,6 +354,7 @@ class Catalog extends CmsModule
         {
             $assets = DS . SITE . DS . Starter::app()->getTheme() . DS . "assets";
             Starter::app ()->headManager->addJs ( $assets . "/js/catalog.js" );
+            Starter::app ()->headManager->addCss ( $assets . "/css/catalog.css" );
             return true;
         }
         else
