@@ -7,7 +7,7 @@
 class SliderWidget extends CmsWidget
 {
     private $table;
-    public function __construct ( $parent, $params )
+    public function __construct ( $parent )
     {
         parent::__construct ( "Slider", $parent );
         $this->table = "slider";

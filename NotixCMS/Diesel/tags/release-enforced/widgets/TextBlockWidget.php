@@ -7,7 +7,7 @@
 class TextBlockWidget extends CmsWidget
 {
     private $table;
-    public function __construct ( $parent, $params )
+    public function __construct ( $parent )
     {
         parent::__construct ( "TextBlock", $parent );
         $this->table = "blocks";

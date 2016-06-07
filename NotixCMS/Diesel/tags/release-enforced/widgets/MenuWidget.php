@@ -6,14 +6,13 @@
  */
 class MenuWidget extends CmsWidget
 {
-    public function __construct ( $parent, $params )
+    public function __construct ( $parent )
     {
         parent::__construct ( "Menu", $parent );
     }
 
     public function render ()
     {
-        //$sitemap = Starter::app ()->content->getSiteMap ();
         return TemplateEngine::view ( "widgets/menu", [], null, true );
     }
 }
