@@ -325,7 +325,7 @@ class Content extends CmsModule
 
     public function sendForm ( $params )
     {
-        $id = ArrayTools::head ( $params );
+        $id = $_POST['form_id'];//ArrayTools::head ( $params );
         $form = $this->getForm ( $id );
         $fields = $this->getFormFields ( $form->id );
         $cutValueLength = 10240;

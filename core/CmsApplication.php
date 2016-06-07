@@ -61,7 +61,13 @@ class CmsApplication extends CmsModule
             "headManager" => 'components.Header',
             'content' => 'components.SiteContent',
             'imager' => "components.Imager",
-            'widgetFactory' => "components.WidgetFactory"
+            'widgetFactory' => "components.WidgetFactory",
+            'session' =>
+            [
+                'class' => "components.SessionManager",
+                'sessionName' => "CMS_SESSION",
+                'lifeTime' => 36000
+            ]
         ];
 //        $config['controllers'] =
 //        [
@@ -210,5 +216,10 @@ class CmsApplication extends CmsModule
     public function getWidgetfactory ()
     {
         return $this->getComponent ( "widgetFactory" );
+    }
+
+    public function getSession ()
+    {
+        return $this->getComponent ( "session" );
     }
 }

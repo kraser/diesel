@@ -2,21 +2,43 @@
 
 class Blog extends CmsModule
 {
-    private $data;
-    private $table = 'blog';
-    private $seo;
-    private $return;
-    private $year = 0;
-    private $month = 0;
-    private $id = 0;
-    private $currentCategoryId = 0;
-    private $monthesIn = array ( 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря' );
-    private $monthes = array ( 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь' );
+//    private $data;
+//    private $table = 'blog';
+//    private $seo;
+//    private $return;
+//    private $year = 0;
+//    private $month = 0;
+//    private $id = 0;
+//    private $currentCategoryId = 0;
+//    private $monthesIn = array ( 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря' );
+//    private $monthes = array ( 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь' );
 
     public function __construct ( $alias, $parent, $config )
     {
         parent::__construct ( $alias, $parent );
         $this->data = Starter::app ()->data;
+        $this->model = "Blog";
+        $this->template = "page";
+        $this->actions =
+        [
+//            'default' =>
+//            [
+//                'method' => 'view'
+//            ],
+//            'map' =>
+//            [
+//                'method' => 'siteMap'
+//            ],
+//            'contacts' =>
+//            [
+//                'method' => 'contacts'
+//            ],
+//            'send' =>
+//            [
+//                'method' => 'sendForm'
+//            ]
+        ];
+        $this->table = 'blog';
     }
 
     /** Вывод блока новостей, в зависимости от URI
@@ -24,28 +46,67 @@ class Blog extends CmsModule
      */
     function Run ()
     {
+        $action = $this->createAction ();
         //RSS
-        if ( isset ( $_GET['rss'] ) )
-        {
-            $this->RSS ();
-        }
-
         $path = Starter::app ()->urlManager->getUriParts ();
-        array_shift ( $path );
-        if ( count ( $path ) === 0 || $path[0] === "list" )
-        {
-            $this->params = count ( $path ) ? $path : null;
-            return $this->actionList ();
-        }
-        else if ( count ( $path ) === 1 )
-        {
-            $this->params = $path;
-            return $this->actionView ();
-        }
+        if ( $action )
+            return $action->run ();
         else
         {
-            page404 ();
+
+            if ( !count($path))
+                page404 ();
+            else if ( count($path) == 1)
+                return $this->viewTopic ( $path );
+            else
+                return $this->viewRecord ( $path );
         }
+//        array_shift ( $path );
+//        if ( count ( $path ) === 0 || $path[0] === "list" )
+//        {
+//            $this->params = count ( $path ) ? $path : null;
+//            return $this->actionList ();
+//        }
+//        else if ( count ( $path ) === 1 )
+//        {
+//            $this->params = $path;
+//            return $this->actionView ();
+//        }
+//        else
+//        {
+//            page404 ();
+//        }
+    }
+
+    private function viewTopic ( $param )
+    {
+        $alias = array_shift ( $param );
+        $sql = "SELECT n.* FROM `prefix_" . $this->table . "_topics` AS n
+            WHERE n.`deleted`='N' AND n.`show`='Y' AND `top`=0 AND `nav`='$alias'";
+        $topic = SqlTools::selectObject ( $sql );
+        if ( $topic )
+            $blogList = SqlTools::selectObjects ("SELECT * FROM `prefix_blog` WHERE `top`=" . $topic->id . " AND `deleted`='N' AND `show`='Y'" );
+        else
+            $blogList = [];
+        $template = $topic && $topic->template ? : $alias . "List";
+        $this->title =  [ $topic->name ];
+        return $this->render ( $template, [ 'blogs' => $blogList ] );
+    }
+
+    private function viewRecord ( $param )
+    {
+        $alias = array_shift ( $param );
+        $sql = "SELECT n.* FROM `prefix_" . $this->table . "_topics` AS n
+            WHERE n.`deleted`='N' AND n.`show`='Y' AND `top`=0 AND `nav`='$alias'";
+        $topic = SqlTools::selectObject ( $sql );
+        $blogAlias = array_shift ( $param );
+        if ( $topic )
+            $blog = SqlTools::selectObject ("SELECT * FROM `prefix_blog` WHERE `top`=" . $topic->id . " AND `link`='$blogAlias'" );
+        else
+            $blog = null;
+        $template = $topic && $topic->template ? : $alias;
+        $this->title =  [ $topic->name, str_replace ( "|", " ", $blog->name ) ];
+        return $this->render ( $template, [ 'blog' => $blog ] );
     }
 
     private function actionList ()
@@ -128,7 +189,7 @@ class Blog extends CmsModule
             'paging' => $paging,
             'text' => $content,
             'news' => $newsList
-            ), __CLASS__ );
+            ), __CLASS__, true );
     }
 
 
@@ -208,7 +269,7 @@ class Blog extends CmsModule
             'name' => $vars['title'],
             'date' => $vars['date'],
             'text' => $content
-            ), __CLASS__ );
+            ), __CLASS__, true );
     }
 
 

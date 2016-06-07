@@ -6,7 +6,7 @@
  */
 class SiteMapWidget extends CmsWidget
 {
-    public function __construct ( $parent, $params )
+    public function __construct ( $parent )
     {
         parent::__construct ( "SiteMap", $parent );
     }

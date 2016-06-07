@@ -15,6 +15,7 @@ class Site extends CmsApplication
     {
         parent::__construct ( $alias, $config );
         require_once  DOCROOT . DS . 'system' . DS . "lib" . DS . "template_engine.php";
+
     }
 
     /**

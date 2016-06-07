@@ -99,13 +99,15 @@ class Blog extends AdminModule
                 //Табы (методы этого класса)
                 'tabs' => array (
                     'Images' => 'Изображения',
-                    '_Seo' => 'SEO',
-                    'Tags' => 'Теги'
+                    '_Seo' => 'SEO'/*,
+                    'Tags' => 'Теги'*/
                 )
                 ), array (
                 'id' => array ( 'name' => '№', 'class' => 'min' ),
                 'name' => array ( 'name' => 'Имя новости', 'length' => '1-128' ),
+                'text' => array ( 'name' => 'HTML текст страницы', 'hide_from_table' => true ),
                 'anons' => array ( 'name' => 'Анонс новости', 'hide_from_table' => true ),
+                'link' => array ( 'name' => 'Ссылка', 'length' => '1-128' ),
                 'show' => array ( 'name' => 'Показывать', 'class' => 'min' ),
                 'date' => array ( 'name' => 'Дата публикации', 'transform' => function($str)
                     {

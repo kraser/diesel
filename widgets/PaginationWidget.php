@@ -7,7 +7,7 @@
 class PaginationWidget extends CmsWidget
 {
     private $buttons;
-    public function __construct ( $parent, $provider )
+    public function __construct ( $parent )
     {
         parent::__construct ( "Pagination", $parent );
         $this->buttons = 5;

@@ -197,6 +197,7 @@ class Content extends AdminModule
                 (
                     'id' => array ( 'name' => '№', 'class' => 'min' ),
                     'name' => array ( 'name' => 'Название раздела', 'length' => '1-100', 'link' => $this->GetLink () . '&top={id}' ),
+                    'text' => array ( 'name' => 'HTML текст страницы', 'hide_from_table' => true ),
                     'nav' => array
                     (
                         'name' => 'URI ссылка',
