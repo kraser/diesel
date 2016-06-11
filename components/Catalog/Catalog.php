@@ -384,15 +384,17 @@ class Catalog extends CmsModule
     {
         $this->template = "one";
         $this->model = "Catalog";
-        if ( isset ( $_SESSION['seen'][$this->product->id] ) )
+        $isSeen = Starter::app ()->session->getParameter ( 'seen' );
+        if ( isset ( $isSeen[$this->product->id] ) )
         {
             SqlTools::execute ( "UPDATE `prefix_products` SET `rate`=`rate` + 1 WHERE `id`=" . $this->product->id );
             SqlTools::execute ( "UPDATE `prefix_products_topics` SET `rate`=`rate` + 1 WHERE `id`=" . $this->topic->id );
         }
+        else
+            $isSeen = [];
 
-        if ( !isset ( $_SESSION['seen'] ) )
-            $_SESSION['seen'] = array ();
-        $_SESSION['seen'][$this->product->id] = true;
+        $isSeen[$this->product->id] = true;
+        Starter::app ()->setParameter ( "seen", $isSeen );
 
         $product = $this->product;
         $this->getTaggedFeatures ( array ( $product->id ) );
@@ -572,14 +574,14 @@ class Catalog extends CmsModule
         else
             $params['orderBy'] = "`order` ASC, `rate` DESC";
 
-        $isFilter = filter_input ( INPUT_POST, "isFilter", FILTER_SANITIZE_NUMBER_INT ) || array_key_exists ( "productsFilter", $_SESSION );
-        $isChangedCategory = $this->currentCategoryId && array_key_exists ( "currentCategory", $_SESSION ) && $_SESSION['currentCategory'] != $this->currentCategoryId;
+        $isFilter = filter_input ( INPUT_POST, "isFilter", FILTER_SANITIZE_NUMBER_INT ) || Starter::app ()->session->getParameter ( "productsFilter" );
+        $isChangedCategory = $this->currentCategoryId && Starter::app ()->session->getParameter ( "currentCategory" ) && Starter::app ()->session->getParameter ( "currentCategory" ) != $this->currentCategoryId;
         if ( $isChangedCategory )
             $this->clearSearchParams ();
 
         $search = $this->search ();
 
-        $_SESSION['currentCategory'] = $this->currentCategoryId;
+        Starter::app ()->session->setParameter ( "currentCategory", $this->currentCategoryId );
         if ( $isFilter )
         {
             $isClear = filter_input ( INPUT_POST, "isClear", FILTER_SANITIZE_NUMBER_INT );
@@ -590,14 +592,14 @@ class Catalog extends CmsModule
                 $productsFilter = $this->getFilterParamsFromPost ();
                 if ( count ( $productsFilter ) )
                 {
-                    $_SESSION["productsFilter"] = $productsFilter;
+                    Starter::app ()->session->setParameter ( "productsFilter", $productsFilter );
                     $this->filters = $productsFilter;
                     $this->isFilter = true;
                 }
                 else
                 {
-                    $this->filters = $_SESSION["productsFilter"];
-                    $this->isFilter = count ( $_SESSION["productsFilter"] );
+                    $this->filters = Starter::app ()->session->getParameter ( "productsFilter" );
+                    $this->isFilter = count ( Starter::app ()->session->getParameter ( "productsFilter" ) );
                 }
                 $this->checkFiltersForClear ();
             }
@@ -614,12 +616,12 @@ class Catalog extends CmsModule
         $params["show"] = "Y";
 
 
-        if ( array_key_exists ( 'paramFilter', $_SESSION ) && $_SESSION['paramFilter'] )
+        if ( Starter::app ()->session->getParameter ( 'paramFilter' ) )
         {
             $filterParams = $this->filterByParams ( $productFilter );
             $params = array_merge ( $params, $filterParams );
         }
-        if ( array_key_exists ( 'tagFilter', $_SESSION ) && $_SESSION['tagFilter'] )
+        if ( Starter::app ()->session->getParameter ( 'tagFilter' ) )
         {
             $tagsClauses = $this->filterByTags ( $productFilter, $cats );
             $params = array_merge ( $params, array ( $tagsClauses ) );
@@ -752,8 +754,8 @@ class Catalog extends CmsModule
         {
             if ( isset ( $options[$order] ) && ($orderDirection == 'ASC' || $orderDirection == 'DESC') )
             {
-                $_SESSION['orderd'] = $orderDirection;
-                $_SESSION['order'] = $order;
+                Starter::app ()->session->setParameter ( 'orderd', $orderDirection );
+                Starter::app ()->session->setParameter ( 'order', $order );
                 foreach ( $options as $field => $val )
                 {
                     if ( $order == $field )
@@ -767,13 +769,13 @@ class Catalog extends CmsModule
                 }
             }
         }
-        else if ( array_key_exists ( "order", $_SESSION ) )
+        else if ( Starter::app ()->session->getParameter ( "order" ) )
         {
             foreach ( $options as $field => $val )
             {
-                if ( $_SESSION['order'] == $field )
+                if (Starter::app ()->session->getParameter ( "order" ) == $field )
                 {
-                    $direction = array_key_exists ( "orderd", $_SESSION ) ? $_SESSION['orderd'] : "ASC";
+                    $direction = Starter::app ()->session->getParameter ( "orderd" ) ? : "ASC";
                     $options[$field]['current'] = true;
                     $options[$field]['direction'] = $direction;
                     $options[$field]['link'] = $urlManager->createRequestParameters ( array ( 'page' => false, 'order' => $field, 'orderd' => ($direction == 'ASC' ? 'DESC' : 'ASC') ) );
@@ -1050,7 +1052,8 @@ class Catalog extends CmsModule
             $image = Starter::app ()->imager->getMainImage ( 'Catalog', $product->id );
             $product->image = $image['src'];
             $product->images = Starter::app ()->imager->getImages ( 'Catalog', $product->id );
-            $product->inCompare = array_key_exists ( "compare", $_SESSION ) && array_key_exists ( $product->id, $_SESSION['compare'] );
+            $compare = Starter::app ()->session->getParameter ( "compare" );
+            $product->inCompare = !is_null ( $compare ) && array_key_exists ( $product->id, $compare );
             //todo формирование характеристик перенести сюда
             if ( count ( $this->productsFeatures ) == 0 )
             {
@@ -1376,7 +1379,7 @@ class Catalog extends CmsModule
             return;
         }
         $tagsIds = array ();
-        $tagsParams = $_SESSION["productsFilter"];
+        $tagsParams = Starter::app ()->session->getParameter ( "productsFilter" );
         foreach ( array_keys ( $tagsParams ) as $id )
         {
             if ( is_numeric ( $id ) )
@@ -1441,16 +1444,12 @@ class Catalog extends CmsModule
         $this->isFilter = !$needClear;
         $this->filters = $needClear ? array () : $tagsParams;
         if ( $needClear )
-        {
-            unset ( $_SESSION["productsFilter"] );
-        }
+            Starter::app ()->session->clearParameter ( "productsFilter" );
         else
-        {
-            $_SESSION["productsFilter"] = $tagsParams;
-        }
+            Starter::app ()->session->setParameter ( "productsFilter", $tagsParams );
 
-        $_SESSION['paramFilter'] = count ( $paramFilter ) ? $paramFilter : null;
-        $_SESSION['tagFilter'] = count ( $tagFilter ) ? $tagFilter : null;
+        Starter::app ()->session->setParameter ( 'paramFilter', count ( $paramFilter ) ? $paramFilter : null );
+        Starter::app ()->session->setParameter ( 'tagFilter', count ( $tagFilter ) ? $tagFilter : null );
     }
 
     /**
@@ -1460,9 +1459,9 @@ class Catalog extends CmsModule
     {
         $this->isFilter = false;
         $this->filters = array ();
-        unset ( $_SESSION["productsFilter"] );
-        unset ( $_SESSION['paramFilter'] );
-        unset ( $_SESSION['tagFilter'] );
+        Starter::app ()->clearParameter ( "productsFilter" );
+        Starter::app ()->clearParameter ( 'paramFilter' );
+        Starter::app ()->clearParameter ( 'tagFilter' );
     }
 
     /**
@@ -1544,7 +1543,7 @@ class Catalog extends CmsModule
         {
             return "";
         }
-        $tagsParams = $_SESSION["productsFilter"];
+        $tagsParams = Starter::app ()->getParameter ( "productsFilter" );
         $params = array ();
         $categoryTags = array ();
 
@@ -1680,8 +1679,9 @@ class Catalog extends CmsModule
 
             if ( array_key_exists ( "price", $this->filters ) )
             {
-                $fTag->from = $_SESSION["productsFilter"][$fTag->alias]["from"];
-                $fTag->to = $_SESSION["productsFilter"][$fTag->alias]["to"];
+                $productsFilter = Starter::app ()->session->getParameter ( "productsFilter" );
+                $fTag->from = $productsFilter[$fTag->alias]["from"];
+                $fTag->to = $productsFilter[$fTag->alias]["to"];
             }
             else
             {
@@ -2605,10 +2605,10 @@ class Catalog extends CmsModule
 
     function Seen ()
     {
-        if ( !isset ( $_SESSION['seen'] ) || empty ( $_SESSION['seen'] ) )
+        if ( is_null ( Starter::app ()->session->getParameter ( 'seen' ) ) )
             page404 ();
 
-        $ids = array_reverse ( array_keys ( $_SESSION['seen'] ) );
+        $ids = array_reverse ( array_keys ( Starter::app ()->session->getParameter ( 'seen' ) ) );
 
         $prod = SqlTools::selectRows ( "SELECT * FROM `prefix_products` WHERE `id` IN (" . implode ( ',', $ids ) . ") AND `deleted`='N' AND `show`='Y' ", MYSQL_ASSOC );
 
@@ -2634,10 +2634,10 @@ class Catalog extends CmsModule
 
     function SeenBlock ( $limit = 0 )
     {
-        if ( !isset ( $_SESSION['seen'] ) || empty ( $_SESSION['seen'] ) )
+        if ( is_null ( Starter::app ()->session->getParameter ( 'seen' ) ) )
             return;
 
-        $ids = array_reverse ( array_keys ( $_SESSION['seen'] ) );
+        $ids = array_reverse ( array_keys ( Starter::app ()->session->getParameter ( 'seen' ) ) );
         if ( $limit > 0 )
             $ids = array_slice ( $ids, 0, $limit );
 
@@ -2658,7 +2658,7 @@ class Catalog extends CmsModule
         return tpl ( 'modules/' . __CLASS__ . '/promoBlocks/seen', array (
             'littleProductsList' => $this->CustomLittleProductsList ( $products ),
             'limit' => $limit,
-            'count' => count ( $_SESSION['seen'] )
+            'count' => count ( Starter::app ()->session->getParameter ( 'seen' ) )
             ) );
     }
 

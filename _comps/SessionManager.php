@@ -38,6 +38,11 @@ class SessionManager extends CmsComponent
         $_SESSION[$name] = $value;
     }
 
+    public function clearParameter ( $name )
+    {
+        unset ( $_SESSION[$name] );
+    }
+
     private $sessionName;
     public function setSessionName ( $name )
     {
