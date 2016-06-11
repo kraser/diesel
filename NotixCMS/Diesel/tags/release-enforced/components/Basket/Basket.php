@@ -239,10 +239,11 @@ class Basket extends CmsModule
      */
     public function getBasketList ()
     {
-        if ( empty ( $_SESSION['basket'] ) )
+        $basketStr = Starter::app ()->session->getParameter ( 'basket' );
+        if ( is_null ( $basketStr ) )
             return null;
 
-        $basket = unserialize ( $_SESSION['basket'] );
+        $basket = unserialize ( $basketStr );
         $totals = 0;
         $count = 0;
         $items = ArrayTools::pluck ( $basket->products, "productId" );
@@ -278,7 +279,7 @@ class Basket extends CmsModule
     {
         if ( (!$basket ) )
         {
-            unset ( $_SESSION['basket'] );
+            Starter::app ()->session->clearParameter ( 'basket' );
             return;
         }
 
@@ -294,7 +295,7 @@ class Basket extends CmsModule
         $basket->total = $totals;
         $basket->count = $count;
 
-        $_SESSION['basket'] = serialize ( $basket );
+        Starter::app ()->setParameter ( 'basket', serialize ( $basket ) );
     }
 
     /**
@@ -466,7 +467,7 @@ class Basket extends CmsModule
         $this->basket = $basket;
         $this->currentBasketId = $id;
         $items = ArrayTools::select ( $basket->products, "productId", $basketItem->productId );
-        $_SESSION['basket'] = serialize ( $basket );
+        Starter::app ()->setParameter ( 'basket', serialize ( $basket ) );
 
         return [ 'redirect' => "1" ];
     }

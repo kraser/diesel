@@ -4,13 +4,43 @@
  *
  * @author kraser
  */
-class ArticleManager
+class ArticleManager extends CmsModel
 {
     private $table;
 
     public function __construct()
     {
+        parent::__construct ( "Article", $parent );
         $this->table = 'articles';
+        $this->selectQuery = "
+            SELECT
+                `a`.`id` AS id,
+                `a`.`alias` AS alias,
+                `a`.`title` AS title,
+                `a`.`anons` AS anons,
+                `a`.`text` AS text,
+                `a`.`date` AS date,
+                `a`.`authorId` AS aithorId,
+                `a`.`show` AS view,
+                `a`.`deleted` AS deleted,
+                `a`.`created` AS createDate,
+                `a`.`modified` AS modifyDate
+            FROM `prefix_" . $this->table . "` `a`
+            {where}
+            {order}
+            ";
+
+        $this->reference =
+        [
+            'id' => [ 'expression' => '`a`.`id`', 'type' => 'integer', 'raw' => '`id`' ],
+            'alias' => [ 'expression' => '`a`.`alias`', 'type' => 'varchar', 'raw' => '`alias`' ],
+            'title' => [ 'expression' => '`a`.`title`', 'type' => 'varchar', 'raw' => 'title' ],
+            'anons' => [ 'expression' => '`a`.`anons`', 'type' => 'varchar', 'raw' => 'anons' ],
+            'text' => [ 'expression' => '`a`.`text`', 'type' => 'text', 'raw' => '`text`' ],
+            'date' => [ 'expression' => '`a`.`date`', 'type' => 'date', 'raw' => '`date`' ],
+            'authorId' => [ 'expression' => '`a`.`authorId`', 'type' => 'integer', 'raw' => '`authorId`' ]
+        ];
+        $this->modelClass = "Article";
     }
 
     public function find ( $params = null )
