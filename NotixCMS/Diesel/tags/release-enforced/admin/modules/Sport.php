@@ -254,7 +254,7 @@ class Sport extends AdminModule
             ],
             'tabs' =>
             [
-                'playerImages' => 'Изображения',
+                'tourneyImages' => 'Изображения',
                 '_Seo' => 'SEO'
             ]
         ],
@@ -273,6 +273,7 @@ class Sport extends AdminModule
                 'if_empty_make_uri' => 'name',
                 'hide_from_table' => false
             ],
+            'type' => [ 'name' => 'Тип турнира' ],
             'seasonId' =>
             [
                 'name' => 'Сезон',
@@ -376,6 +377,13 @@ class Sport extends AdminModule
     protected function playerImages ()
     {
         setcookie ( "moduleName", "Player", 0, "/" );
+        setcookie ( "method", __FUNCTION__, 0, "/" );
+        $this->Images ();
+    }
+
+    protected function tourneyImages ()
+    {
+        setcookie ( "moduleName", "Tourney", 0, "/" );
         setcookie ( "method", __FUNCTION__, 0, "/" );
         $this->Images ();
     }

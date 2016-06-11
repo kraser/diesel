@@ -191,8 +191,12 @@ class Tools
 
         $ext = strtolower ( $ext );
         $ret = isset ( $mimeIcons[$ext] ) ? $mimeIcons[$ext] : $mimeIcons[''];
+        if ( file_exists ( Starter::getAliasPath ( "webroot.site") . DS . Starter::app()->getTheme() . DS . "assets/images/mimetypes/$ret" ) )
+            $icon = DS . SITE . DS . Starter::app()->getTheme() . DS . "assets/images/mimetypes/$ret";
+        else
+            $icon = MIMETYPES . DS . $ret;
 
-        return MIMETYPES . DS . $ret;
+        return $icon;
     }
 
     /**

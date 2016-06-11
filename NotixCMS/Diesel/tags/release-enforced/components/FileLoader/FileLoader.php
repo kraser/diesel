@@ -85,7 +85,7 @@ class FileLoader extends CmsModule
                 $mime = pathinfo ( $doc->link );
                 $doc->mime = Tools::getMimeIconForExt ( strtolower ( $mime['extension'] ) );
                 $doc->date = DatetimeTools::inclinedDate ( $doc->date );
-                //$doc->image = $this->createDocThumb ( DOCROOT . $doc->link );
+                $doc->image = $this->createDocThumb ( DOCROOT . $doc->link );
 
                 if ( $doc->include == 'Y' )
                     $docArch[] = DOCUMENTS . DS . basename ( $doc->link );
@@ -141,14 +141,21 @@ class FileLoader extends CmsModule
     {
         $parts = pathinfo ( $pathToDoc );
         $fileName = $parts['filename'];
+        if ( file_exists ( IMGS . DS . $fileName . ".png" ) )
+            return "/data/images/$fileName.png";
+
         $command = "/usr/bin/soffice --invisible --convert-to pdf:writer_pdf_Export --outdir '" . Starter::getAliasPath ( "cache" ) . "' '" . $pathToDoc ."'";
-        $return = null;
-        $return = passthru ( $command, $return1 );
-        if ( $return )
-            return "";
-
-        $imgCommand = "convert '" . Starter::getAliasPath(cache) . DS . $fileName . ".pdf[0]' -colorspace RGB -geometry 200 '" . IMGS . DS . $fileName . ".jpg'";
-        $result = system ( $imgCommand );
-
+        ob_start ();
+        system ( $command );
+        $ret = ob_get_contents ();
+        ob_end_clean ();
+        $imgCommand = "convert '" . Starter::getAliasPath ( 'cache' ) . DS . $fileName . ".pdf[0]' -colorspace RGB -geometry 200 '" . IMGS . DS . $fileName . ".png'";
+        system ( $imgCommand );
+        FileTools::removeFile ( Starter::getAliasPath ( 'cache' ) . DS . $fileName . ".pdf" );
+        chmod ( IMGS . DS . $fileName . ".png", 0777 );
+        if ( file_exists ( IMGS . DS . $fileName . ".png" ) )
+            return "/data/images/$fileName.png";
+        else
+            return null;
     }
 }
