@@ -43,9 +43,9 @@ class Sport extends CmsModule
             [
                 'method' => 'keeperStatView'
             ],
-            "regular" =>
+            "results" =>
             [
-                'method' => 'regular'
+                'method' => 'tourneyResults'
             ],
             'leaders' =>
             [
@@ -73,8 +73,11 @@ class Sport extends CmsModule
         if ( parent::beforeRender () )
         {
             $assetPath = str_replace ( Starter::getAliasPath('webroot'), "", $this->basePath ) . "/assets" ;
+            $assets = DS . SITE . DS . Starter::app ()->getTheme () . "/assets" ;
             $header = Starter::app ()->headManager;
             $header->addJs ( $assetPath . '/js/sortManager.js');
+            $header->addJs ( $assets . '/js/jquery.bracket.js');
+            //$header->addJs ( $assets . '/js/jquery.bracket.min.js');
             return true;
         }
         else
@@ -184,26 +187,28 @@ class Sport extends CmsModule
         return $this->render ( 'keepersStat', $params );
     }
 
-    private function regular ( $search )
+    private function tourneyResults ( $search )
     {
         $manager = new TourneyModel ( $this );
-        $tourneysManager = new TourneyModel ( $this );
         if ( array_key_exists ( "tourney", $search ) )
             $seasonId = $search['tourney'];
         else
         {
             $seasonId = 0;
-            $search['tourney'] = $tourneysManager->defaultTourneyId ();
+            $search['tourney'] = $manager->defaultTourneyId ();
         }
-        $table = $manager->search ( $search );
-        $this->title = "Регулярный чемпионат";
+        $tourneys = $manager->getTourneys ( $seasonId );
+        $type = $manager->selectedTourney->type;
+        $result = $manager->search ( $search );
+        $this->title = $type == "regular" ? "Регулярный чемпионат" : "Плэйофф";
         $this->model = "Tourney";
         $this->template = "regularView";
         $params =
         [
-            'result' => $table,
-            'seasons' => $tourneysManager->getTourneys ( $seasonId ),
-            'columns' => $manager->getColumns ()
+            'type' => $type,
+            'result' => $result['rows'],
+            'seasons' => $tourneys,
+            'columns' => $result['columns']
         ];
         return $this->render ( 'regular', $params );
     }
@@ -220,11 +225,4 @@ class Sport extends CmsModule
     {
         return Starter::app ()->content->getLinkById ( $this->currentDocument->id );
     }
-
-    public function getBest ()
-    {
-        $manager = new PlayerStatModel ( $this );
-        return $manager->search ( [ "orderBy"=> "scores.desc", "limit" => 10 ] );
-    }
-
 }
