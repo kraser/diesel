@@ -365,21 +365,26 @@ class CmsModule extends CmsComponent
             $output = ob_get_contents ();
             ob_end_clean ();
         }
-        return $output;
+        $html = $this->replaceCustomTags ( $output );
+
+        return $html;
     }
 
-    private function resolveTemplateFile ( $templateName, $moduleName )
+    private function resolveTemplateFile ( $templateName )
     {
         $moduleName = get_class ( $this );
-        $customCompPath = $moduleName ? "modules" . DS . $moduleName . DS : "";
-        $templateRoot = TEMPL . DS . Starter::app ()->getTheme ();
-        $templatePath = $templateRoot . DS . "templates" . DS . $customCompPath;
+        $parts = array_filter ( explode ( '/', $templateName ) );
+
+
+        $customPath = count ( $parts ) == 1 ? $moduleName . DS : "";
+        $themeRoot = Starter::getAliasPath ( 'site' ) . DS . Starter::app ()->theme;
+        $themePath = $themeRoot . DS . "templates" . DS . $customPath;
         $componentPath = $moduleName ? Starter::getAliasPath ( $moduleName ) . DS . "templates" . DS : "";
 
         if ( defined ( "MODE" ) && MODE == "Admin" )
             $templateFile = DOCROOT . DS . 'admin/tpls/' . $templateName;
-        else if ( file_exists ( $templatePath . $templateName . ".tpl" ) || file_exists ( $templatePath . $templateName . EXT ) )
-            $templateFile = $templatePath . $templateName;
+        else if ( file_exists ( $themePath . $templateName . ".tpl" ) || file_exists ( $themePath . $templateName . EXT ) )
+            $templateFile = $themePath . $templateName;
         else if ( file_exists ( $componentPath . $templateName . ".tpl" ) || file_exists ( $componentPath . $templateName . EXT ) )
             $templateFile = $componentPath . $templateName;
         else
@@ -445,7 +450,7 @@ class CmsModule extends CmsComponent
         }
         if ( count ( $pathStack ) > 1 && !array_key_exists ( $name, $data ) )
             $data[] = $name;
-        
+
         $action->data = $data;
         return $action;
     }
@@ -509,10 +514,51 @@ class CmsModule extends CmsComponent
     public function widget ( $className, $properties = [], $return = false )
     {
         $widget = Starter::app ()->widgetFactory->createWidget ( $this, $className, $properties );
-        $output = $widget->render();
+        $output = $widget->run ();
         if ( $return )
             return $output;
         else
             echo $output;
+    }
+
+    private $breadcrumbs;
+    public function getBreadcrumbs ()
+    {
+        if ( is_null ( $this->breadcrumbs ) )
+            $this->breadcrumbs = [];
+
+        return $this->breadcrumbs;
+    }
+
+    public function setBreadcrumbs ( $breadcrumbs )
+    {
+        $this->breadcrumbs = $breadcrumbs;
+    }
+
+    /**
+     * <pre>Заменяет вставленные тэги блоков и форм {block:block_name_or_id} {form:form-name-or-id}</pre>
+     * @param String $html
+     */
+    private function replaceCustomTags ( $html )
+    {
+        $matches = [];
+        preg_match_all ( '/\{(block|form):([\w_-]+)\}/simx', $html, $matches, PREG_PATTERN_ORDER );
+        if ( isset ( $matches[0] ) && !empty ( $matches ) )
+        {
+            for ( $i = 0, $c = count ( $matches[0] ); $i < $c; $i++ )
+            {
+                if ( isset ( $matches[1][$i] ) )
+                {
+                    if ( $matches[1][$i] == 'block' )
+                        $replacement = $this->widget ( "BlockWidget", [ 'blockId' => $matches[2][$i] ], true );
+                    else if ( $matches[1][$i] == 'form' )
+                        $replacement = $this->widget ( "FormWidget", [ 'formId' => $matches[2][$i] ], true );
+
+                    $html = str_replace ( $matches[0][$i], $replacement, $html );
+                }
+            }
+        }
+
+        return $html;
     }
 }

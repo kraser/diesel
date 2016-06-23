@@ -349,75 +349,75 @@ class Portfolio extends Component
      *
      * array( array('name','link') )
      */
-    public function breadCrumbs ()
-    {
-        if ( empty ( $this->path ) )
-        {
-            $this->buildModulePath ();
-        }
-        if ( !empty ( $this->path ) )
-        {
-            $ret = array ();
-            foreach ( $this->path as $i )
-            {
-                if ( $i['type'] == 'alter_page' )
-                {
-                    $ret[] = array (
-                        'name' => $this->alter_pages[$i['data']]['name'],
-                        'link' => Starter::app ()->content->getLinkByModule ( 'Catalog' ) . '/' . $i['data']
-                    );
-                    break;
-                }
-                $link = '';
-                if ( $i['type'] == 'topic' )
-                    $link = $this->Link ( $i['data']['id'] );
-                if ( $i['type'] == 'product' )
-                    $link = $this->Link ( $i['data']['top'], $i['data']['id'] );
+//    public function breadCrumbs ()
+//    {
+//        if ( empty ( $this->path ) )
+//        {
+//            $this->buildModulePath ();
+//        }
+//        if ( !empty ( $this->path ) )
+//        {
+//            $ret = array ();
+//            foreach ( $this->path as $i )
+//            {
+//                if ( $i['type'] == 'alter_page' )
+//                {
+//                    $ret[] = array (
+//                        'name' => $this->alter_pages[$i['data']]['name'],
+//                        'link' => Starter::app ()->content->getLinkByModule ( 'Catalog' ) . '/' . $i['data']
+//                    );
+//                    break;
+//                }
+//                $link = '';
+//                if ( $i['type'] == 'topic' )
+//                    $link = $this->Link ( $i['data']['id'] );
+//                if ( $i['type'] == 'product' )
+//                    $link = $this->Link ( $i['data']['top'], $i['data']['id'] );
+//
+//                $ret[] = array ( 'name' => $i['data']['name'], 'link' => $link );
+//            }
+//
+//            return $ret;
+//        }
+//        else
+//            return array ();
+//    }
 
-                $ret[] = array ( 'name' => $i['data']['name'], 'link' => $link );
-            }
-
-            return $ret;
-        }
-        else
-            return array ();
-    }
-
-    public function breadCrumbsCategory ( $arr )
-    {
-        if ( count ( $arr ) <= 2 )
-            $crumbscats = array ();
-
-        if ( isset ( $arr[3] ) )
-        {
-            $crumbs = explode ( "/", substr ( $arr[3]['link'], 1 ) );
-            $crumbscats = SqlTools::selectRows ( "SELECT b.`id`, b.`name` as `name`, b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
-                JOIN  `prefix_products_topics` AS b ON a.id = b.top WHERE ( a.`deleted`='N') AND ( b.`deleted`='N') AND ( a.`nav`='" . $crumbs[2] . "') ORDER BY b.`id`" );
-
-            foreach ( $crumbscats as $k => $crumbscat )
-            {
-                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
-                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE ( `module`='Topic') AND ( `module_id`='" . $crumbscat['id'] . "') AND ( `main`='Y')" );
-                $crumbscats[$k]['img'] = $imgSrc;
-            }
-        }
-
-        if ( isset ( $arr[4] ) )
-        {
-            $crumbs = explode ( "/", substr ( $arr[4]['link'], 1, strlen ( $arr[4]['link'] ) ) );
-            $crumbscats = SqlTools::selectRows ( "SELECT b.`id`, b.`name` as `name`, b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
-                JOIN  `prefix_products_topics` AS b ON a.id=b.top WHERE ( a.`deleted`='N') AND ( b.`deleted`='N') AND ( a.`nav`='" . $crumbs[2] . "') ORDER BY b.`id`" );
-
-            foreach ( $crumbscats as $k => $crumbscat )
-            {
-                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
-                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE ( `module`='Topic') AND ( `module_id`='" . $crumbscat['id'] . "') AND ( `main`='Y')" );
-                $crumbscats[$k]['img'] = $imgSrc;
-            }
-        }
-
-        return ($crumbscats);
-    }
+//    public function breadCrumbsCategory ( $arr )
+//    {
+//        if ( count ( $arr ) <= 2 )
+//            $crumbscats = array ();
+//
+//        if ( isset ( $arr[3] ) )
+//        {
+//            $crumbs = explode ( "/", substr ( $arr[3]['link'], 1 ) );
+//            $crumbscats = SqlTools::selectRows ( "SELECT b.`id`, b.`name` as `name`, b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
+//                JOIN  `prefix_products_topics` AS b ON a.id = b.top WHERE ( a.`deleted`='N') AND ( b.`deleted`='N') AND ( a.`nav`='" . $crumbs[2] . "') ORDER BY b.`id`" );
+//
+//            foreach ( $crumbscats as $k => $crumbscat )
+//            {
+//                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
+//                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE ( `module`='Topic') AND ( `module_id`='" . $crumbscat['id'] . "') AND ( `main`='Y')" );
+//                $crumbscats[$k]['img'] = $imgSrc;
+//            }
+//        }
+//
+//        if ( isset ( $arr[4] ) )
+//        {
+//            $crumbs = explode ( "/", substr ( $arr[4]['link'], 1, strlen ( $arr[4]['link'] ) ) );
+//            $crumbscats = SqlTools::selectRows ( "SELECT b.`id`, b.`name` as `name`, b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
+//                JOIN  `prefix_products_topics` AS b ON a.id=b.top WHERE ( a.`deleted`='N') AND ( b.`deleted`='N') AND ( a.`nav`='" . $crumbs[2] . "') ORDER BY b.`id`" );
+//
+//            foreach ( $crumbscats as $k => $crumbscat )
+//            {
+//                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
+//                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE ( `module`='Topic') AND ( `module_id`='" . $crumbscat['id'] . "') AND ( `main`='Y')" );
+//                $crumbscats[$k]['img'] = $imgSrc;
+//            }
+//        }
+//
+//        return ($crumbscats);
+//    }
 
     /**
      *
@@ -425,88 +425,88 @@ class Portfolio extends Component
      * @return type
      * @todo refactoring to OOP
      */
-    function Paging ( $products )
-    {
-        $products_count = count ( $products );
-        $products_onpage = Tools::getSettings ( 'Catalog', 'onpage', 8 );
-        $pages_count = ceil ( $products_count / $products_onpage );
-        if ( isset ( $_GET['page'] ) )
-            $page_current = abs ( ( int ) $_GET['page'] );
-        else
-            $page_current = 1;
-        $products_from = ($page_current - 1) * $products_onpage;
+//    function Paging ( $products )
+//    {
+//        $products_count = count ( $products );
+//        $products_onpage = Tools::getSettings ( 'Catalog', 'onpage', 8 );
+//        $pages_count = ceil ( $products_count / $products_onpage );
+//        if ( isset ( $_GET['page'] ) )
+//            $page_current = abs ( ( int ) $_GET['page'] );
+//        else
+//            $page_current = 1;
+//        $products_from = ($page_current - 1) * $products_onpage;
+//
+//        if ( $products_count <= $products_onpage )
+//        {
+//            $rendered = '';
+//        }
+//        else
+//        {
+//            $rendered = tpl ( 'modules/' . __CLASS__ . '/paging', array (
+//                'pages_count' => $pages_count,
+//                'page_current' => $page_current,
+//                'products_count' => $products_count,
+//                'products_from' => $products_from + 1,
+//                'products_to' => $products_onpage * $page_current > $products_count ? $products_count : $products_onpage * $page_current,
+//            ) );
+//        }
+//
+//        $url = "?limit=" . $products_onpage . "&page=1";
+//        $url_page = "?limit=" . $products_onpage . "&page=";
+//        $count_show_pages = Tools::getSettings ( 'Catalog', 'show_pages', 8 );
+//
+//
+//
+//        $left = $page_current - 1;
+//        $right = $pages_count - $page_current;
+//        if ( $left < floor ( $count_show_pages / 2 ) )
+//            $start = 1;
+//        else
+//            $start = $page_current - floor ( $count_show_pages / 2 );
+//        $end = $start + $count_show_pages - 1;
+//        if ( $end > $pages_count )
+//        {
+//            $start -= ($end - $pages_count);
+//            $end = $pages_count;
+//            if ( $start < 1 )
+//                $start = 1;
+//        }
+//
+//
+//        $rendered = tpl ( 'modules/' . __CLASS__ . '/paging', array (
+//            'pages_count' => $pages_count,
+//            'page_current' => $page_current,
+//            'products_count' => $products_count,
+//            'products_from' => $products_from + 1,
+//            'products_to' => $products_onpage * $page_current > $products_count ? $products_count : $products_onpage * $page_current,
+//            'products_onpage' => $products_onpage,
+//            'url' => $url,
+//            'url_page' => $url_page,
+//            'count_show_pages' => $count_show_pages,
+//            'start' => $start,
+//            'end' => $end,
+//        ) );
+//
+//
+//        $this->paging_rendered = $rendered;
+//
+//        return array (
+//            'products' => array_slice ( $products, $products_from, $products_onpage ),
+//            'rendered' => $rendered
+//        );
+//    }
 
-        if ( $products_count <= $products_onpage )
-        {
-            $rendered = '';
-        }
-        else
-        {
-            $rendered = tpl ( 'modules/' . __CLASS__ . '/paging', array (
-                'pages_count' => $pages_count,
-                'page_current' => $page_current,
-                'products_count' => $products_count,
-                'products_from' => $products_from + 1,
-                'products_to' => $products_onpage * $page_current > $products_count ? $products_count : $products_onpage * $page_current,
-            ) );
-        }
-
-        $url = "?limit=" . $products_onpage . "&page=1";
-        $url_page = "?limit=" . $products_onpage . "&page=";
-        $count_show_pages = Tools::getSettings ( 'Catalog', 'show_pages', 8 );
-
-
-
-        $left = $page_current - 1;
-        $right = $pages_count - $page_current;
-        if ( $left < floor ( $count_show_pages / 2 ) )
-            $start = 1;
-        else
-            $start = $page_current - floor ( $count_show_pages / 2 );
-        $end = $start + $count_show_pages - 1;
-        if ( $end > $pages_count )
-        {
-            $start -= ($end - $pages_count);
-            $end = $pages_count;
-            if ( $start < 1 )
-                $start = 1;
-        }
-
-
-        $rendered = tpl ( 'modules/' . __CLASS__ . '/paging', array (
-            'pages_count' => $pages_count,
-            'page_current' => $page_current,
-            'products_count' => $products_count,
-            'products_from' => $products_from + 1,
-            'products_to' => $products_onpage * $page_current > $products_count ? $products_count : $products_onpage * $page_current,
-            'products_onpage' => $products_onpage,
-            'url' => $url,
-            'url_page' => $url_page,
-            'count_show_pages' => $count_show_pages,
-            'start' => $start,
-            'end' => $end,
-        ) );
-
-
-        $this->paging_rendered = $rendered;
-
-        return array (
-            'products' => array_slice ( $products, $products_from, $products_onpage ),
-            'rendered' => $rendered
-        );
-    }
-
-    function GetPaging ()
-    {
-        if ( isset ( $this->paging_rendered ) )
-        {
-            return $this->paging_rendered;
-        }
-        else
-        {
-            return false;
-        }
-    }
+//    function GetPaging ()
+//    {
+//        if ( isset ( $this->paging_rendered ) )
+//        {
+//            return $this->paging_rendered;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//    }
 
     function Project ()
     {

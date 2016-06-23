@@ -11,6 +11,7 @@ class CmsPagination extends CmsObject
     private $offset;
     public function __construct ( $owner, $itemsCount, $offset )
     {
+        parent::__construct ();
         $this->owner = $owner;
         $this->itemsCount = $itemsCount;
         $this->offset = $offset;

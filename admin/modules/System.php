@@ -24,7 +24,7 @@ class System extends AdminModule
         }
 
         $this->title = 'Настройки модулей';
-        $this->hint['text'] = 'Для вставки блока в шаблон используйте php-синтаксис — <code>&lt;?php block(0)?&gt;</code><br /> Для вставки в любой текст — <code>{block:0}</code><br /><br /> Где 0 — № нужного блока, он находится в первом столбце таблицы';
+        $this->hint['text'] = 'Для вставки блока в в любой текст — <code>{block:0}</code><br /><br /> Где 0 — Id или callname нужного блока';
         $this->content = $this->DataTable ( 'settings', array (
             //Имена системных полей
             'nouns' => array (
