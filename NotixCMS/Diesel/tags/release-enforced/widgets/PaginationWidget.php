@@ -24,7 +24,7 @@ class PaginationWidget extends CmsWidget
         $this->paginator = $paginator;
     }
 
-    public function render ()
+    public function run ()
     {
         $parent = $this->paginator->parent;
         $pageSize = $parent->pageSize;
@@ -57,6 +57,6 @@ class PaginationWidget extends CmsWidget
             'start' => $start,
             'end' => $end,
         ];
-        return TemplateEngine::view ( "widgets/paging", $model );
+        return $this->renderPart ( "widgets/paging", $model );
     }
 }

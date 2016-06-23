@@ -1809,60 +1809,60 @@ class Catalog extends CmsModule
      * disable => флаг активности ссылки
      * @return Array <p>массив параметров для хлебных крошек модуля</p>
      */
-    public function breadCrumbs ()
-    {
-        if ( empty ( $this->path ) )
-        {
-            $this->buildModulePath ();
-        }
-        if ( !empty ( $this->path ) )
-        {
-            $query = "SELECT `top` AS top, COUNT(`id`) AS count FROM `prefix_products` WHERE `deleted`='N' AND `show`='Y' GROUP BY `top`";
-            $productsInTop = SqlTools::selectRows ( $query, MYSQL_ASSOC, "top" );
-
-            $ret = array ();
-            foreach ( $this->path as $i )
-            {
-                $data = $i['data'];
-                if ( $i['type'] == 'alterPage' )
-                {
-                    $ret[] = array
-                        (
-                        'name' => $this->actions[$data]['name'],
-                        'link' => Starter::app ()->content->getLinkByModule ( 'Catalog' ) . '/' . $i['data'],
-                    );
-                    break;
-                }
-                $link = '';
-                $disable = false;
-                if ( $i['type'] == 'topic' )
-                {
-                    $inTop = array_key_exists ( $data->id, $productsInTop ) ? $productsInTop[$data->id] : 0;
-                    if ( $inTop['count'] == 0 )
-                    {
-                        $disable = true;
-                    }
-                    else
-                    {
-                        $disable = false;
-                    }
-
-                    $link = $this->Link ( $data->id );
-                }
-
-                if ( $i['type'] == 'product' )
-                {
-                    $link = $this->Link ( $data->top, $data->id );
-                }
-
-                $ret[] = array ( 'name' => $data->name, 'link' => $link, 'id' => $data->id, 'disable' => $disable );
-            }
-
-            return $ret;
-        }
-        else
-            return array ();
-    }
+//    public function breadCrumbs ()
+//    {
+//        if ( empty ( $this->path ) )
+//        {
+//            $this->buildModulePath ();
+//        }
+//        if ( !empty ( $this->path ) )
+//        {
+//            $query = "SELECT `top` AS top, COUNT(`id`) AS count FROM `prefix_products` WHERE `deleted`='N' AND `show`='Y' GROUP BY `top`";
+//            $productsInTop = SqlTools::selectRows ( $query, MYSQL_ASSOC, "top" );
+//
+//            $ret = array ();
+//            foreach ( $this->path as $i )
+//            {
+//                $data = $i['data'];
+//                if ( $i['type'] == 'alterPage' )
+//                {
+//                    $ret[] = array
+//                        (
+//                        'name' => $this->actions[$data]['name'],
+//                        'link' => Starter::app ()->content->getLinkByModule ( 'Catalog' ) . '/' . $i['data'],
+//                    );
+//                    break;
+//                }
+//                $link = '';
+//                $disable = false;
+//                if ( $i['type'] == 'topic' )
+//                {
+//                    $inTop = array_key_exists ( $data->id, $productsInTop ) ? $productsInTop[$data->id] : 0;
+//                    if ( $inTop['count'] == 0 )
+//                    {
+//                        $disable = true;
+//                    }
+//                    else
+//                    {
+//                        $disable = false;
+//                    }
+//
+//                    $link = $this->Link ( $data->id );
+//                }
+//
+//                if ( $i['type'] == 'product' )
+//                {
+//                    $link = $this->Link ( $data->top, $data->id );
+//                }
+//
+//                $ret[] = array ( 'name' => $data->name, 'link' => $link, 'id' => $data->id, 'disable' => $disable );
+//            }
+//
+//            return $ret;
+//        }
+//        else
+//            return array ();
+//    }
 
     /**
      * <pre>Возвращает html-текст контейнера "С этим товаром покупают"</pre>
@@ -2021,43 +2021,43 @@ class Catalog extends CmsModule
         return $docsTree;
     }
 
-    public function breadCrumbsCategory ( $arr, $level = 0 )
-    {
-        if ( count ( $arr ) <= 2 )
-        {
-            $crumbscats = array ();
-        }
-
-        if ( isset ( $arr[2] ) )
-        {
-            $crumbs = explode ( "/", substr ( $arr[2]['link'], 1 ) );
-            $crumbscats = SqlTools::selectRows ( "SELECT b.`id` , b.`name` as `name` , b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
-                JOIN  `prefix_products_topics` AS b ON a.`id`=b.`top` WHERE a.`deleted`='N' AND b.`deleted`='N' AND a.`nav`='" . $crumbs[1] . "') ORDER BY b.`id`" );
-
-            foreach ( $crumbscats as $k => $crumbscat )
-            {
-                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
-                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE `module`='Topic' AND `module_id`='" . $crumbscat['id'] . "' AND `main`='Y'" );
-                $crumbscats[$k]['img'] = $imgSrc;
-            }
-        }
-
-        if ( isset ( $arr[3] ) )
-        {
-            $crumbs = explode ( "/", substr ( $arr[3]['link'], 1, strlen ( $arr[3]['link'] ) ) );
-            $crumbscats = SqlTools::selectRows ( "SELECT b.`id` , b.`name` as `name` , b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
-                JOIN  `prefix_products_topics` AS b ON a.`id`=b.`top` WHERE a.`deleted`='N' AND b.`deleted`='N' AND a.`nav`='" . $crumbs[2 - $level] . "') ORDER BY b.`id`" );
-
-            foreach ( $crumbscats as $k => $crumbscat )
-            {
-                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
-                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE `module`='Topic' AND `module_id`='" . $crumbscat['id'] . "' AND `main`='Y')" );
-                $crumbscats[$k]['img'] = $imgSrc;
-            }
-        }
-
-        return ($crumbscats);
-    }
+//    public function breadCrumbsCategory ( $arr, $level = 0 )
+//    {
+//        if ( count ( $arr ) <= 2 )
+//        {
+//            $crumbscats = array ();
+//        }
+//
+//        if ( isset ( $arr[2] ) )
+//        {
+//            $crumbs = explode ( "/", substr ( $arr[2]['link'], 1 ) );
+//            $crumbscats = SqlTools::selectRows ( "SELECT b.`id` , b.`name` as `name` , b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
+//                JOIN  `prefix_products_topics` AS b ON a.`id`=b.`top` WHERE a.`deleted`='N' AND b.`deleted`='N' AND a.`nav`='" . $crumbs[1] . "') ORDER BY b.`id`" );
+//
+//            foreach ( $crumbscats as $k => $crumbscat )
+//            {
+//                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
+//                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE `module`='Topic' AND `module_id`='" . $crumbscat['id'] . "' AND `main`='Y'" );
+//                $crumbscats[$k]['img'] = $imgSrc;
+//            }
+//        }
+//
+//        if ( isset ( $arr[3] ) )
+//        {
+//            $crumbs = explode ( "/", substr ( $arr[3]['link'], 1, strlen ( $arr[3]['link'] ) ) );
+//            $crumbscats = SqlTools::selectRows ( "SELECT b.`id` , b.`name` as `name` , b.`nav` as `nav2`, a.`nav` as `nav1` FROM  `prefix_products_topics` AS a
+//                JOIN  `prefix_products_topics` AS b ON a.`id`=b.`top` WHERE a.`deleted`='N' AND b.`deleted`='N' AND a.`nav`='" . $crumbs[2 - $level] . "') ORDER BY b.`id`" );
+//
+//            foreach ( $crumbscats as $k => $crumbscat )
+//            {
+//                $crumbscats[$k]['link'] = $crumbscat['nav1'] . '/' . $crumbscat['nav2'];
+//                $imgSrc = SqlTools::selectValue ( "SELECT `src` FROM  `prefix_images` WHERE `module`='Topic' AND `module_id`='" . $crumbscat['id'] . "' AND `main`='Y')" );
+//                $crumbscats[$k]['img'] = $imgSrc;
+//            }
+//        }
+//
+//        return ($crumbscats);
+//    }
 
     /**
      * <pre>Возвращает список категорий текущего или нижележащего уровня.

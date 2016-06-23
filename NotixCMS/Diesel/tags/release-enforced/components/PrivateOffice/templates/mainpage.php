@@ -24,7 +24,7 @@
                             <div class="item"><a href="/basket">Корзина</a></div>
                         </div>
                     <div class="text">
-                        <?php block('main_text')?>
+                        {block:main_text}
                     </div>
                     <div id="button"><button onclick="location.href='/catalog'">Каталог товаров</button></div>
                     <div id="button1">
@@ -43,7 +43,7 @@
             <div id="footer">
                 <div id="maket2">
                     <div class="contacts">
-                        <?php block("address"); ?>
+                        {block:address}
                     </div>
                     <div class="jako">
                         © 2013 «Жако» мебельная фабрика

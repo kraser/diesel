@@ -339,53 +339,53 @@ class Blog extends CmsModule
      * SEO для новостей
      * @param int $id
      */
-    private function seo ()
-    {
-        $id = ( int ) $this->id;
-
-        if ( $id == 0 )
-        {
-            $this->seo = array ();
-            return false;
-        }
-
-        $header = Starter::app ()->headManager->Run ();
-        $sql = "SELECT `title`, `keywords`, `description`, `tagH1`
-            FROM `prefix_seo`
-            WHERE `module`='" . __CLASS__ . "'
-            AND `module_id`=$id
-            AND `module_table`='$this->table'";
-
-        $this->seo = SqlTools::selectRow ( $sql, MYSQL_ASSOC );
-        if ( !empty ( $this->seo ) )
-        {
-            //Keywords
-            if ( !empty ( $this->seo['keywords'] ) )
-            {
-                $header->addMetaText ( "<meta name='keywords' content='" . htmlspecialchars ( $this->seo['keywords'] ) . "' />" );
-            }
-            //Description
-            if ( !empty ( $this->seo['description'] ) )
-            {
-                $header->addMetaText ( "<meta name='description' content='" . htmlspecialchars ( $this->seo['description'] ) . "' />" );
-            }
-            //Title
-            if ( !empty ( $this->seo['title'] ) )
-            {
-                $this->seo['title'] = $this->seo['title'];
-            }
-            else
-            {
-                $this->seo['title'] = Starter::app ()->title . ( $this->currentDocument ? "  — " . $this->currentDocument->title : "" );
-            }
-        }
-        else
-        {
-            $this->seo['title'] = Starter::app ()->title . ( $this->currentDocument ? "  — " . $this->currentDocument->title : "" );
-        }
-
-        $header->setTitle ( $this->seo['title'] );
-    }
+//    private function seo ()
+//    {
+//        $id = ( int ) $this->id;
+//
+//        if ( $id == 0 )
+//        {
+//            $this->seo = array ();
+//            return false;
+//        }
+//
+//        $header = Starter::app ()->headManager->Run ();
+//        $sql = "SELECT `title`, `keywords`, `description`, `tagH1`
+//            FROM `prefix_seo`
+//            WHERE `module`='" . __CLASS__ . "'
+//            AND `module_id`=$id
+//            AND `module_table`='$this->table'";
+//
+//        $this->seo = SqlTools::selectRow ( $sql, MYSQL_ASSOC );
+//        if ( !empty ( $this->seo ) )
+//        {
+//            //Keywords
+//            if ( !empty ( $this->seo['keywords'] ) )
+//            {
+//                $header->addMetaText ( "<meta name='keywords' content='" . htmlspecialchars ( $this->seo['keywords'] ) . "' />" );
+//            }
+//            //Description
+//            if ( !empty ( $this->seo['description'] ) )
+//            {
+//                $header->addMetaText ( "<meta name='description' content='" . htmlspecialchars ( $this->seo['description'] ) . "' />" );
+//            }
+//            //Title
+//            if ( !empty ( $this->seo['title'] ) )
+//            {
+//                $this->seo['title'] = $this->seo['title'];
+//            }
+//            else
+//            {
+//                $this->seo['title'] = Starter::app ()->title . ( $this->currentDocument ? "  — " . $this->currentDocument->title : "" );
+//            }
+//        }
+//        else
+//        {
+//            $this->seo['title'] = Starter::app ()->title . ( $this->currentDocument ? "  — " . $this->currentDocument->title : "" );
+//        }
+//
+//        $header->setTitle ( $this->seo['title'] );
+//    }
 
     /**
      * Генерация массива разделов для подменю,
@@ -436,20 +436,20 @@ class Blog extends CmsModule
      *
      * array( array('name','link') )
      */
-    public function breadCrumbs ()
-    {
-        if ( $this->id != 0 )
-        {
-            $news = $this->data->GetDataById ( $this->table, $this->id );
-            return array ( array ( 'name' => $news['name'], 'link' => $this->Link ( array (), $this->id ) ) );
-        }
-        elseif ( $this->year != 0 && $this->month != 0 )
-        {
-            return array ( array ( 'name' => 'Новости за ' . mb_strtolower ( $this->monthes[$this->month - 1] ) . ' ' . $this->year, 'link' => $this->Link ( $this->year, $this->month ) ) );
-        }
-
-        return array ();
-    }
+//    public function breadCrumbs ()
+//    {
+//        if ( $this->id != 0 )
+//        {
+//            $news = $this->data->GetDataById ( $this->table, $this->id );
+//            return array ( array ( 'name' => $news['name'], 'link' => $this->Link ( array (), $this->id ) ) );
+//        }
+//        elseif ( $this->year != 0 && $this->month != 0 )
+//        {
+//            return array ( array ( 'name' => 'Новости за ' . mb_strtolower ( $this->monthes[$this->month - 1] ) . ' ' . $this->year, 'link' => $this->Link ( $this->year, $this->month ) ) );
+//        }
+//
+//        return array ();
+//    }
 
     /**
      * Генерация и выдача RSS новостей

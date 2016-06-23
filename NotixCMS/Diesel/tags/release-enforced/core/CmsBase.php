@@ -366,3 +366,4 @@ class CmsBase
 }
 
 spl_autoload_register ( array ( "CmsBase",  "autoload" ) );
+require CORE . '/classes.php';

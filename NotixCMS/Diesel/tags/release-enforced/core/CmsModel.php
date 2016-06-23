@@ -219,6 +219,7 @@ class Model extends CmsObject
     public $id;
     public $alias;
     public $title;
+    public $image;
     public $view;
     public $deleted;
     public $createDate;

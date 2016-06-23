@@ -143,14 +143,6 @@ class Header extends CmsComponent
         return $this->model->tagH1;
     }
 
-    /**
-     * <pre>Базовый метод компонента Header</pre>
-     */
-    public function Run ()
-    {
-        return TemplateEngine::view ( "header", array ( "header" => $this->model ), __CLASS__, true );
-    }
-
     public function seoSettings ( $controller )
     {
         $entity = $controller->currentDocument;
@@ -185,6 +177,11 @@ class Header extends CmsComponent
                 $this->setTagH1 ( $entity->title );
             }
         }
+    }
+
+    public function getHead ()
+    {
+        return $this->model;
     }
 }
 

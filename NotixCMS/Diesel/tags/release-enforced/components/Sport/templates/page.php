@@ -1,6 +1,6 @@
 <html>
 <head>
-    <?php echo Starter::app ()->headManager->Run () ?>
+    <?php echo $this->renderPart ( '/parts/head' );  ?>
 </head>
   <body>
                     <h1><?php echo $title?></h1>

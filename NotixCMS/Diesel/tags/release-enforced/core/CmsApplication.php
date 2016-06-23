@@ -33,6 +33,7 @@ class CmsApplication extends CmsModule
             "controllers" => DOCROOT . DS . 'controllers',
             'widgets'=> DOCROOT . DS . 'widgets',
             'behaviors' => DOCROOT . DS . "behaviors",
+            'site' => DOCROOT . DS . "theme"
         ];
 		if ( isset ( $config['aliases'] ) )
         {
