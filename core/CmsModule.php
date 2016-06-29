@@ -561,4 +561,26 @@ class CmsModule extends CmsComponent
 
         return $html;
     }
+    
+    /**
+    * Страница с 404 ошибкой
+    */
+   function page404 ()
+   {
+       //echo '<pre>'.print_r(debug_backtrace(),1).'</pre>';
+       if ( Starter::app ()->develop )
+       {
+           $array_debug = debug_backtrace ();
+           $debug = 'Страница не найдена файлом <code style="font-weight:bold;">' . $array_debug[0]['file'] . '</code> на строке: <code style="font-weight:bold;">' . $array_debug[0]['line'] . '</code>';
+       }
+       else
+           $debug = '';
+       global $documents;
+       header ( "HTTP/1.1 404 Not Found" );
+       header ( "Status: 404 Not Found" );
+       echo tpl ( 'page404', array (
+           'debug' => $debug
+       ) );
+       exit ();
+   }
 }

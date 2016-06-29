@@ -2,7 +2,7 @@
 $config =
 [
     'title' => 'Diesel',
-    'theme' => 'startUp',
+    'theme' => 'project',
     'adminMail' => '',
     'adminPhone' => '',
 
@@ -13,10 +13,10 @@ $config =
         'dbType' => 'mysql',
         'dbPort' => 3306,
         'dbHost' => 'localhost',
-        'dbUser' => 'root',
-        'dbPassword' => 'root',
-        'dbName' => 'dbName',
-        'dbPrefix' => 'ofr_',
+        'dbUser' => '15notixtest',
+        'dbPassword' => 'HCSh4UsE',
+        'dbName' => '15notixtest',
+        'dbPrefix' => 'mce_',
         'set_names_utf8' => true,
         'show_query_devmode' => false
 
@@ -28,6 +28,10 @@ $config =
     'moduleBehaviors' =>
     [
         'comments' => 'behaviors.Comments'
+    ],
+    'aliases' =>
+    [
+        'site' => DOCROOT . DS . 'site'
     ]
 
 ];

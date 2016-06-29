@@ -6,65 +6,64 @@
  */
 class MenuWidget extends CmsWidget
 {
+    public $categories;
+    public $nn;
+    
     public function __construct ( $parent )
     {
         parent::__construct ( "Menu", $parent );
     }
 
-    public function render ()
+    public function run ()
     {
-        return TemplateEngine::view ( "widgets/menu", [], null, true );
+        $menu = $this->createMenu ();
+        return TemplateEngine::view ( "widgets/menu", [ 'menu' => $menu ], null, true );
     }
 
     private function createMenu ()
     {
-        $docs = Starter::app ()->content->docs;
-        $menuByTop = [];
-        $menu = [];
-        $activeSet = false;
-        foreach ( $docs as $dox )
-        {
-            $i = (array) $dox;
-            if ( $doc->showMenu == 'N' )
-                continue;
-            //Отмечаем текущую страницу
-            if ( in_array ( $doc->nav, Starter::app ()->urlManager->linkPath ) )
-            {
-                $doc->active = true;
-                $activeSet = true;
-            }
-            else
-                $doc->active = false;
-
-            $menuByTop[$i['parentId']][] = $i;
-        }
-        if ( empty ( $menuByTop[0] ) )
-            return tpl ( 'parts/mainmenu', array ( 'menu' => array () ) );
-
-        foreach ( $menuByTop[0] as $top => $i )
-        {
-            $item['root'] = $i;
-            $item['sub'] = [];
-
-                //Проверка на подменю из модуля
-            if ( $i['module'] !== "Content" )
-            {
-                $obj = Starter::app ()->getModule ( $i['module'] );
-                if ( method_exists ( $obj, 'SubMenu' ) )
-                    $item['sub'] = $obj->SubMenu ();
-            }
-            else
-            {
-                if ( isset ( $menuByTop[$i['id']] ) )
-                {
-                    foreach ( $menuByTop[$i['id']] as $id => $j )
-                    {
-                        $item['sub'][] = $j;
-                    }
+        $items =  SqlTools::selectObjects("SELECT id, top, nav, name FROM `prefix_content` WHERE `showmenu`='Y' ORDER BY `order`");
+        
+        foreach ($items as $key=>$item)
+                $menu[$item->top][$item->id] = $item;
+        
+        $this->categories = $menu;
+        
+        $menu = $this->buildTree();
+        
+        return  $menu ;
+    }
+    
+    public function buildTree($parent_id = 0, $only_parent = false)
+    {
+        $this->categories; 
+        echo $parent_nav;
+        $uri = $_SERVER['REQUEST_URI'];
+        
+        if ($parent_id > 0) 
+            foreach($this->categories[$parent_id] as $cat)
+                $parent_nav = SqlTools::selectValue("SELECT `nav` FROM `prefix_content` WHERE id={$cat->top}").'/';
+        else $parent_nav = '';
+        
+        if(is_array($this->categories) and isset($this->categories[$parent_id])){            
+            if ($parent_id == 0) $tree = '<ul class="sf-menu" data-type="navbar">';
+                else $tree = '<ul>';
+                            
+            if($only_parent==false){
+                foreach($this->categories[$parent_id] as $cat)
+                {                        
+                    $class = '/'.$cat->nav == $uri ? 'class="active"' : '';
+                    
+                    $tree .= '<li '.$class.'><a href="/'.$parent_nav.$cat->nav.'">'.$cat->name;
+                    $tree .=  $this->buildTree($cat->id);
+                    $tree .= '</a></li>';
                 }
             }
-            $menu[] = $item;
+            $tree .= '</ul>';
         }
-        return tpl ( 'parts/mainmenu', array ( 'menu' => $menu ) );
+        else return null;
+        
+        return $tree;   
+        
     }
 }
