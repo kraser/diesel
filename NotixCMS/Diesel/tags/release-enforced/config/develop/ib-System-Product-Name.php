@@ -1,8 +1,8 @@
 <?php
 $config =
 [
-    'title' => 'Сибирская хоккейная лига',
-    'theme' => 'sibhl',
+    'title' => 'Новый проект',
+    'theme' => 'project',
     'adninMail' => '',
     'adminPhone' => '',
     'db' =>
@@ -12,8 +12,8 @@ $config =
         'dbHost' => 'localhost',
         'dbUser' => 'root',
         'dbPassword' => '111',
-        'dbName' => 'shl',
-        'dbPrefix' => 'ofr_',
+        'dbName' => 'project',
+        'dbPrefix' => 'mce_',
         'set_names_utf8' => true,
         'show_query_devmode' => false
     ],

@@ -27,7 +27,7 @@ class Site extends CmsApplication
     {
         $moduleName = Starter::app()->urlManager->getRoute ();
         if ( !$moduleName)
-            page404 ();
+            $this->page404 ();
         else
         {
             $module = Starter:: app ()->getModule ( $moduleName );

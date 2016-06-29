@@ -34,7 +34,7 @@ class Content extends CmsModule
     {
         $action = $this->createAction ();
         if ( !$action )
-            page404 ();
+            $this->page404 ();
         return $action->run ();
     }
 
