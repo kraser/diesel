@@ -416,14 +416,13 @@ class Catalog extends CmsModule
         $i = 0;
         while ( $i < 3 )
         {
-            $key = rand(0,$count-1);
-            if (!array_key_exists ($key,$newSim))
-            {
+            $key = rand ( 0, $count - 1 );
+            if ( !array_key_exists ( $key, $newSim ) )
                 $newSim[$key] = $similar[$key];
-                $i++;
-            }
+
+            $i++;
         }
-        return $this->render ("productCard", array ( "product" => $product, "parent" => $parent, 'similar' => $newSim ));
+        return $this->render ( "productCard", [ "product" => $product, "parent" => $parent, 'similar' => $newSim ] );
     }
 
     /**
