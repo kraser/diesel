@@ -189,7 +189,7 @@ class Question extends Component
 
         $query = "SELECT `id`, CONCAT (`firstName`, ' ', `lastName`) AS `firstName`, `anons`, `description` FROM `prefix_users` WHERE `status`='manager' AND `deleted`='N' ";
 
-        $users = SqlTools::selectRows ( $query, MYSQL_ASSOC, "id" );
+        $users = SqlTools::selectRows ( $query, MYSQLI_ASSOC, "id" );
         $usersId = ArrayTools::numberList ( array_keys ( $users ) );
         $imgs = SqlTools::selectObjects ( "SELECT * FROM `prefix_images` WHERE `module_id` IN ($usersId) AND `main`='Y' AND `module`='Users'", null, "module_id" );
 
@@ -300,9 +300,9 @@ class Question extends Component
             $body .= $question . "\r\n\r\n" . implode ( "\r\n", $addSysFields );
             $toMail = $expert->email ? : Tools::getSettings ( 'Shop', 'notify_mail', Starter::app()->adminMail );
 
-            $mail = new ZFmail ( $toMail, 'noreply@' . $_SERVER['SERVER_NAME'], $_SERVER['SERVER_NAME'] . ': Вопрос эксперту', $body );
-            $mail->send ();
-
+            $messenger = Starter::app ()->messanger;
+            $mail = array ( 'mail', $toMail, 'noreply@' . $_SERVER['SERVER_NAME'], $_SERVER['SERVER_NAME'] . ': Вопрос эксперту', $body );
+            $messenger->send ( $mail );
 
             $result = array ( 'redirect' => '' );
         }
@@ -586,7 +586,7 @@ class Question extends Component
         }
 
         $header = Starter::app ()->headManager;
-        $this->seo = SqlTools::selectRow ( "SELECT * FROM `prefix_seo` WHERE `module`='" . __CLASS__ . "' AND `module_id`=" . $id . " AND `module_table`='" . $this->table . "'", MYSQL_ASSOC );
+        $this->seo = SqlTools::selectRow ( "SELECT * FROM `prefix_seo` WHERE `module`='" . __CLASS__ . "' AND `module_id`=" . $id . " AND `module_table`='" . $this->table . "'", MYSQLI_ASSOC );
         if ( !empty ( $this->seo ) )
         {
             //Keywords

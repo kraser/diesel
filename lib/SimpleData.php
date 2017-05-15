@@ -36,7 +36,7 @@ class SimpleData
             $syscolumns = $this->columns[$table];
         else
         {
-            $fields = SqlTools::selectRows('SHOW COLUMNS FROM `prefix_' . $table . '`', MYSQL_ASSOC);
+            $fields = SqlTools::selectRows('SHOW COLUMNS FROM `prefix_' . $table . '`', MYSQLI_ASSOC);
 
             $syscolumns = array ( );
             foreach($fields as $i)
@@ -81,7 +81,7 @@ class SimpleData
 
         $sql = "SELECT * FROM `prefix_$table` WHERE 1 $where_deleted $where_filter $static_filter $order $limit_filter";
         //$sql = 'SELECT * FROM `prefix_' . $table . '` WHERE 1 ' . $where_deleted . ' ' . $where_filter . ' ' . $static_filter . ' ' . $order . ' ' . $limit_filter;
-        $rows = SqlTools::selectRows( $sql, MYSQL_ASSOC );
+        $rows = SqlTools::selectRows( $sql, MYSQLI_ASSOC );
         foreach($rows as $doc)
         {
             if ( isset( $fieldId ) )

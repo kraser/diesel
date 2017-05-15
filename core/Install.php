@@ -25,7 +25,7 @@ class Install extends CmsComponent
     private function isNoTables ()
     {
         $dbName = $this->dbConf['dbName'];
-        $this->tables = SqlTools::selectRows ( "SHOW TABLES IN `$dbName`", MYSQL_ASSOC );
+        $this->tables = SqlTools::selectRows ( "SHOW TABLES IN `$dbName`", MYSQLI_ASSOC );
         if ( count ( $this->tables ) )
             return false;
         return true;
@@ -62,7 +62,7 @@ class Install extends CmsComponent
 
     private function updateDb ()
     {
-        $installedModule = SqlTools::selectRows ( "SELECT `module` FROM `prefix_migration` WHERE `module`!=''", MYSQL_ASSOC, "module" );
+        $installedModule = SqlTools::selectRows ( "SELECT `module` FROM `prefix_migration` WHERE `module`!=''", MYSQLI_ASSOC, "module" );
         $migrations = SqlTools::selectObjects ( "SELECT * FROM `prefix_migration`", null, "stamp" );
         $toUpdate = [];
         $modules = array_keys ( Starter::app ()->modules );

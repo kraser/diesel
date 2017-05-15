@@ -14,9 +14,9 @@ class SqlTools
     {
         $db = DataBase::getInstance ();
         $query = self::debug ( 1 ) . $query;
-        $result = $db->sqlQuery ( $query );
+        $db->sqlQuery ( $query );
 
-        return $db->fetchObjectSet ( $result, $className, $field );
+        return $db->fetchObjectSet ( $className, $field );
     }
 
     /**
@@ -29,9 +29,9 @@ class SqlTools
     {
         $db = DataBase::getInstance ();
         $query = self::debug ( 1 ) . $query;
-        $result = $db->sqlQuery ( $query );
+        $db->sqlQuery ( $query );
 
-        return $db->fetchObject ( $result, $className );
+        return $db->fetchObject ( $className );
     }
 
     /**
@@ -41,13 +41,13 @@ class SqlTools
      * @param String $key поле для индексации
      * @return Array
      */
-    public static function selectRows ( $query, $type = MYSQL_BOTH, $key = "" )
+    public static function selectRows ( $query, $type = MYSQLI_BOTH, $key = "" )
     {
         $db = DataBase::getInstance ();
         $query = self::debug ( 1 ) . $query;
-        $result = $db->sqlQuery ( $query );
+        $db->sqlQuery ( $query );
 
-        return $db->fetchRowSet ( $result, $type, $key );
+        return $db->fetchRowSet ( $type, $key );
     }
 
     /**
@@ -57,13 +57,13 @@ class SqlTools
      * @param String $key поле для индексации
      * @return Array
      */
-    public static function selectRow ( $query, $type = MYSQL_BOTH )
+    public static function selectRow ( $query, $type = MYSQLI_BOTH )
     {
         $db = DataBase::getInstance ();
         $query = self::debug ( 1 ) . $query;
-        $result = $db->sqlQuery ( $query );
+        $db->sqlQuery ( $query );
 
-        return $db->fetchRow ( $result, $type );
+        return $db->fetchRow ( $type );
     }
 
     /**
@@ -78,6 +78,20 @@ class SqlTools
         $db->sqlQuery ( $query );
 
         return $db->fetchField ();
+    }
+
+    /**
+     * <pre>Возвращает массив значений</pre>
+     * @param String $query текст запроса
+     * @return String
+     */
+    public static function selectValues ( $query )
+    {
+        $db = DataBase::getInstance ();
+        $query = self::debug ( 1 ) . $query;
+        $db->sqlQuery ( $query );
+
+        return $db->fetchFieldSet ();
     }
 
     /**
@@ -103,7 +117,7 @@ class SqlTools
         $query = self::debug ( 1 ) . $query;
         $db->sqlQuery ( $query );
 
-        return mysql_insert_id ();
+        return $db->insertId ();
     }
 
     /** Добавляет в виде комментария в начало SQL-запроса информацию о том,
@@ -131,6 +145,6 @@ class SqlTools
     public static function escapeString ( $string )
     {
         $db = DataBase::getInstance ();
-        return mysql_real_escape_string ( $string );
+        return $db->escapeString ( $string );
     }
 }

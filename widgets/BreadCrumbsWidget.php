@@ -8,42 +8,41 @@ class BreadCrumbsWidget extends CmsWidget
 {
     public function __construct ( $parent )
     {
-        parent::__construct ( "Menu", $parent );
+        parent::__construct ( "Breadcrumbs", $parent );
+        $this->separator = " | ";
     }
 
-    public function render ()
+    public function run ()
     {
-        $breadCrumbs = $this->getBreadCrumbs();
-        return TemplateEngine::view ( "widgets/breadcrumbs", [ 'breadcrumbs' => $breadCrumbs ], null, true );
+        $breadCrumbs = $this->buildCrumbs();
+        return $this->renderPart ( "widgets/breadcrumbs", [ 'breadcrumbs' => $breadCrumbs ] );
     }
 
-    private function getBreadCrumbs ()
+    private function buildCrumbs ()
     {
         $docsByPath = Starter::app ()->urlManager->docsByPath;
-        if ( empty ( $docsByPath ) )
-            return [];
-
         $crumbs = [];
-        foreach ( $docsByPath as $crumb )
+        $mainPage = false;
+        if ( !empty ( $docsByPath ) )
         {
-            $link = Starter::app ()->content->getLinkById ( $crumb->id );
-            $mainPage = $mainPage || $link == "/";
-            $crumbs[] = (object) [ 'title' => $crumb->title, 'link' => $link, 'id' => $crumb->id, 'active' => false ];
+            foreach ( $docsByPath as $crumb )
+            {
+                $link = Starter::app ()->content->getLinkById ( $crumb->id );
+                $mainPage = $mainPage || $link == "/";
+                $crumbs[] = (object) [ 'title' => $crumb->title, 'link' => $link, 'id' => $crumb->id, 'active' => false ];
+            }
         }
         if ( !$mainPage )
-            array_unshift ( $crumb, (object) [ 'name' => 'Главная', 'link' => '/', 'id' => '0', 'active' => false ] );
+            array_unshift ( $crumbs, (object) [ 'title' => 'Главная', 'link' => '/', 'id' => '0', 'active' => false ] );
 
         $last = end ( $docsByPath );
         if ( $last->module !== "Content" )
         {
+            //array_pop ( $crumbs );
             if ( class_exists ( $last->module ) )
             {
                 $module = Starter::app ()->getModule ( $last->module );
-                if ( method_exists ( $module, 'breadCrumbs' ) )
-                {
-                    $moduleCrumbs = $module->breadCrumbs ();
-                    $crumbs = array_merge ( $crumbs, $moduleCrumbs );
-                }
+                $crumbs = array_merge ( $crumbs, $module->breadcrumbs );
             }
         }
 
@@ -51,5 +50,16 @@ class BreadCrumbsWidget extends CmsWidget
         $crumbs[count ( $crumbs ) - 1]->active = true;
 
         return $crumbs;
+    }
+
+    private $separator;
+    public function getSeparator ()
+    {
+        return $this->separator;
+    }
+
+    public function setSeparator  ( $separator )
+    {
+        $this->separator = $separator;
     }
 }

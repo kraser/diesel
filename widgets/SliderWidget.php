@@ -13,10 +13,10 @@ class SliderWidget extends CmsWidget
         $this->table = "slider";
     }
 
-    public function render ()
+    public function run ()
     {
         $slides = $this->getSlideList ();
-        return TemplateEngine::view ( "widgets/slider", [ 'slides' => $slides ], null, true );
+        return $this->renderPart ( "widgets/slider", [ 'slides' => $slides ], null, true );
     }
 
     private function getSlideList ()

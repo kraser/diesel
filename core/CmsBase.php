@@ -51,12 +51,6 @@ class CmsBase
         $this->detectLanguage ();
         setlocale ( LC_ALL, _LOCALE . "." . _CHARSET );
         setlocale ( LC_NUMERIC, "C" );
-        mb_internal_encoding ( _CHARSET );
-
-        $time = 36000;
-        session_set_cookie_params ( $time );
-        session_name ( SID );
-        session_start ();
     }
 
     /**
@@ -126,8 +120,6 @@ class CmsBase
     {
         if ( defined ( "MODE" ) )
             $className = MODE;
-//        else if ( array_key_exists ( 'HTTP_X_REQUESTED_WITH', $_SERVER ) && strtolower ( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest' )
-//            define ( "MODE", "Ajax" );
         else if ( 'cli' == PHP_SAPI )
             $className = "Console";
         else

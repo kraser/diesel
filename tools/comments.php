@@ -115,7 +115,7 @@ function comments_block ( $module, $element_id )
     $sql = "SELECT * FROM `prefix_comments`
             WHERE `module`='" . $module . "' AND `element_id`='" . $element_id . "'
             ORDER BY `timestamp` ASC";
-    $rows = SqlTools::selectRows ( $sql, MYSQL_ASSOC );
+    $rows = SqlTools::selectRows ( $sql, MYSQLI_ASSOC );
     $comments = array ();
     foreach ( $rows as $r )
     {
@@ -165,13 +165,13 @@ function last_comments ( $module, $element_id = null )
         . " ORDER BY `timestamp` DESC"
         . " LIMIT 5";
 
-    $comments = SqlTools::selectRows ( $sql, MYSQL_ASSOC );
+    $comments = SqlTools::selectRows ( $sql, MYSQLI_ASSOC );
 
     $class = new $module;
 
     foreach ( $comments as &$r )
     {
-        $r['title'] = SqlTools::selectValue ( "SELECT `name` FROM `prefix_" . $module . "` WHERE `id`='" . $r['element_id'] . "'", MYSQL_ASSOC );
+        $r['title'] = SqlTools::selectValue ( "SELECT `name` FROM `prefix_" . $module . "` WHERE `id`='" . $r['element_id'] . "'", MYSQLI_ASSOC );
         $r['link'] = $class->Link ( array (), $r['element_id'] );
     }
 

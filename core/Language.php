@@ -15,7 +15,7 @@ class Language
      */
     public function __construct ()
     {
-        self::$data = SqlTools::selectRows ( "SELECT * FROM `prefix_languages_translate`", MYSQL_ASSOC, 'translate1' );
+        self::$data = SqlTools::selectRows ( "SELECT * FROM `prefix_languages_translate`", MYSQLI_ASSOC, 'translate1' );
     }
 
     /**
@@ -79,7 +79,7 @@ class Language
             }
         }
 
-//        $admin_lang = SqlTools::selectRow("SELECT id, code FROM `prefix_languages` WHERE `base_admin` = 'Y'", MYSQL_ASSOC);
+//        $admin_lang = SqlTools::selectRow("SELECT id, code FROM `prefix_languages` WHERE `base_admin` = 'Y'", MYSQLI_ASSOC);
 //        define(_LANG_CODE, $admin_lang['code']);
 //        define(_LANG_ADMIN, $admin_lang['id']);
 //        self::addFields();
@@ -154,8 +154,8 @@ class Language
         {
             $where = ' AND `id` = ' . ( int ) $language_id;
         }
-        $languages = SqlTools::selectRows ( "SELECT * FROM `prefix_languages` WHERE 1 " . $where, MYSQL_ASSOC );
-        $rows = SqlTools::selectRows ( "SELECT * FROM `prefix_languages_fields`", MYSQL_ASSOC );
+        $languages = SqlTools::selectRows ( "SELECT * FROM `prefix_languages` WHERE 1 " . $where, MYSQLI_ASSOC );
+        $rows = SqlTools::selectRows ( "SELECT * FROM `prefix_languages_fields`", MYSQLI_ASSOC );
 
         foreach ( $rows as $row )
         {
@@ -183,8 +183,8 @@ class Language
         {
             $where = ' AND `id` = ' . ( int ) $language_id;
         }
-        $languages = SqlTools::selectRows ( "SELECT * FROM `prefix_languages` WHERE id <> 1 " . $where, MYSQL_ASSOC );
-        $rows = SqlTools::selectRows ( "SELECT * FROM `prefix_languages_fields`", MYSQL_ASSOC );
+        $languages = SqlTools::selectRows ( "SELECT * FROM `prefix_languages` WHERE id <> 1 " . $where, MYSQLI_ASSOC );
+        $rows = SqlTools::selectRows ( "SELECT * FROM `prefix_languages_fields`", MYSQLI_ASSOC );
 
         foreach ( $rows as $row )
         {

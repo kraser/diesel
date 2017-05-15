@@ -15,7 +15,7 @@ class Gallery
 
     function Run ()
     {
-        //$pictures = SqlTools::selectRows ( "SELECT * FROM `prefix_" . self::$table . "` WHERE `show`='Y' AND deleted='N' ORDER BY `date` DESC", MYSQL_ASSOC );
+        //$pictures = SqlTools::selectRows ( "SELECT * FROM `prefix_" . self::$table . "` WHERE `show`='Y' AND deleted='N' ORDER BY `date` DESC", MYSQLI_ASSOC );
         $select = '';
         $join = '';
         $where = '';
@@ -39,10 +39,8 @@ class Gallery
 
             $imageSource = "/themes/" . Starter::app()->theme . "/images/img1.png"; // картинка по умолчанию
             // извлекаем привязанные картинки из prefix_images
-            $imgs = SqlTools::selectRows ( "SELECT * FROM `prefix_images` WHERE `module_id`={$picture['id']} AND `main`='Y' AND `module`='Gallery'", MYSQL_ASSOC );
-            /* knn для работы с хранилищем изображений
-              $imgs = getImagesStorageByModuleId(__CLASS__, $v['id'], true);
-             */
+            $imgs = SqlTools::selectRows ( "SELECT * FROM `prefix_images` WHERE `module_id`={$picture['id']} AND `main`='Y' AND `module`='Gallery'", MYSQLI_ASSOC );
+
             if ( $imgs )
             {
                 foreach ( $imgs as $arr )
@@ -74,7 +72,7 @@ class Gallery
     function GalleryBlock ()
     {
 
-        //$pictures = SqlTools::selectRows ( "SELECT * FROM `prefix_" . self::$table . "` WHERE `show`='Y' AND deleted='N' ORDER BY `date` DESC", MYSQL_ASSOC );
+        //$pictures = SqlTools::selectRows ( "SELECT * FROM `prefix_" . self::$table . "` WHERE `show`='Y' AND deleted='N' ORDER BY `date` DESC", MYSQLI_ASSOC );
         $select = '';
         $join = '';
         $where = '';
@@ -98,10 +96,8 @@ class Gallery
 
             $imageSource = "/themes/" . Starter::app()->theme . "/images/img1.png"; // картинка по умолчанию
             // извлекаем привязанные картинки из prefix_images
-            $imgs = SqlTools::selectRows ( "SELECT * FROM `prefix_images` WHERE `module_id`={$v['id']} AND `main`='Y' AND `module`='Gallery'", MYSQL_ASSOC );
-            /* knn для работы с хранилищем изображений
-              $imgs = getImagesStorageByModuleId(__CLASS__, $v['id'], true);
-             */
+            $imgs = SqlTools::selectRows ( "SELECT * FROM `prefix_images` WHERE `module_id`={$v['id']} AND `main`='Y' AND `module`='Gallery'", MYSQLI_ASSOC );
+
             if ( $imgs )
             {
                 foreach ( $imgs as $arr )

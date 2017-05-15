@@ -6,7 +6,7 @@ class Mysql implements DbInterface
 {
     protected static $instance;
     private $dbPrefix;
-    private $dbConnectId;
+    private $dbConnect;
     private $queryResult;
     private $row = array ();
     private $rowSet = array ();
@@ -18,7 +18,7 @@ class Mysql implements DbInterface
     private $events;
     private $eventMsg;
 
-    public function __construct ( $config, $persistency = false )
+    public function __construct ( $config )
     {
         $dbUser = $config["dbUser"];
         $dbPassword = $config["dbPassword"];
@@ -26,29 +26,35 @@ class Mysql implements DbInterface
         $dbName = $config["dbName"];
         $this->dbPrefix = $config["dbPrefix"];
 
-        if ( $persistency )
-            $this->dbConnectId = mysql_pconnect ( $dbHost, $dbUser, $dbPassword ) or $this->fireEvent ( mysql_error (), 2 );
-        else
-            $this->dbConnectId = mysql_connect ( $dbHost, $dbUser, $dbPassword ) or $this->fireEvent ( mysql_error (), 2 );
+        $this->dbConnect = new mysqli ( $dbHost, $dbUser, $dbPassword, $dbName );
+        if ( $this->dbConnect->connect_error )
+            $this->fireEvent ( $this->dbConnect->connect_error, 2 );
+//        else
+//            $this->dbConnectId = mysql_connect ( $dbHost, $dbUser, $dbPassword ) or $this->fireEvent ( mysql_error (), 2 );
 
-        if ( $this->dbConnectId )
-        {
-            $dbselect = mysql_select_db ( $dbName ) or $this->fireEvent ( mysql_error (), 2 );
-            if ( !$dbselect )
-            {
-                mysql_close ( $this->dbConnectId );
-                $this->dbConnectId = $dbselect;
-            }
+//        if ( $this->dbConnectId )
+//        {
+//            $dbselect = mysql_select_db ( $dbName ) or $this->fireEvent ( mysql_error (), 2 );
+//            if ( !$dbselect )
+//            {
+//                mysql_close ( $this->dbConnectId );
+//                $this->dbConnectId = $dbselect;
+//            }
 
-            mysql_query ( "SET character set 'UTF8'" ) or $this->fireEvent ( mysql_error (), 2 );
-            mysql_query ( "SET names 'UTF8'" ) or $this->fireEvent ( mysql_error (), 2 );
-        }
+            $this->dbConnect->query ( "SET character set 'UTF8'" ) or $this->fireEvent ( mysql_error (), 2 );
+            $this->dbConnect->query ( "SET names 'UTF8'" ) or $this->fireEvent ( mysql_error (), 2 );
+//        }
     }
 
     public static function init ()
     {
         if ( self::$instance === null )
             self::$instance = new self();
+    }
+
+    public static function isInited()
+    {
+        return !empty(self::$instance);
     }
 
     public static function &getInstance ()
@@ -65,17 +71,10 @@ class Mysql implements DbInterface
      */
     function sqlClose ()
     {
-        if ( $this->dbConnectId )
-        {
-            if ( $this->queryResult )
-                mysql_free_result ( $this->queryResult );
+        if ( $this->queryResult )
+            $this->queryResult->free ();
 
-            $result = mysql_close ( $this->dbConnectId );
-
-            return $result;
-        }
-        else
-            return false;
+        $this->queryResult->close ();
     }
 
     /**
@@ -87,18 +86,9 @@ class Mysql implements DbInterface
     function sqlQuery ( $query = "", $transaction = FALSE )
     {
         $query = str_replace ( 'prefix_', $this->dbPrefix, $query );
-        // Remove any pre-existing queries
-
-        // Remove any pre-existing queries
-        unset ( $this->row );
-        unset ( $this->rowSet );
-        unset ( $this->object );
-        unset ( $this->objectSet );
-        unset ( $this->queryResult );
-
         $this->query = $query;
         if ( $query != "" )
-            $this->queryResult = mysql_query ( $query, $this->dbConnectId ) or $this->fireEvent ( mysql_error (), 2 );
+            $this->queryResult = $this->dbConnect->query ( $query ) or $this->fireEvent ( $this->dbConnect->error, 2 );
 
         if ( $this->queryResult )
         {
@@ -114,251 +104,124 @@ class Mysql implements DbInterface
 
     /**
      * <pre>Возвращает кол-во записей</pre>
-     * @param Resource $query_id
+     * @param Resource $queryId
      * @return Integer
      */
-    function numRows ( $query_id = 0 )
+    function numRows ()
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
-        {
-            $result = mysql_num_rows ( $query_id );
-            return $result;
-        }
-        else
-            return false;
+        $result = $this->queryResult->num_rows;
+        return $result;
     }
 
     function affectedRows ()
     {
-        if ( $this->dbConnectId )
-        {
-            $result = mysql_affected_rows ( $this->dbConnectId );
-            return $result;
-        }
-        else
-            return false;
+        $result = $this->dbConnect->affected_rows ();
+        return $result;
     }
 
-    function numFields ( $query_id = 0 )
+    function numFields ()
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
-        {
-            $result = mysql_num_fields ( $query_id );
-            return $result;
-        }
-        else
-            return false;
+        $result = $this->queryResult->field_count;
+        return $result;
     }
 
-    function fieldName ( $offset, $query_id = 0 )
+    function fieldName ( $offset )
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
-        {
-            $result = mysql_field_name ( $query_id, $offset );
-            return $result;
-        }
-        else
-            return false;
+        $field = $this->queryResult->fetch_field_direct ( $offset );
+        $result = $field->name;
+        return $result;
     }
 
-    function fieldType ( $offset, $query_id = 0 )
+    function fieldType ( $offset )
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
-        {
-            $result = mysql_field_type ( $query_id, $offset );
-            return $result;
-        }
-        else
-            return false;
+        $field = $this->queryResult->fetch_field_direct ( $offset );
+        $result = $field->type;
+        return $result;
     }
 
-    function fetchRow ( $query_id = 0, $resultType = MYSQL_BOTH )
+    function fetchRow ( $resultType = MYSQLI_BOTH )
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
-        {
-            $this->row = mysql_fetch_array ( $query_id, $resultType );
-            return $this->row;
-        }
-        else
-            return false;
+        return $this->queryResult->fetch_array ( $resultType );
     }
 
-    function fetchRowSet ( $query_id = 0, $resultType = MYSQL_BOTH, $key = "" )
+    function fetchRowSet ( $resultType = MYSQLI_BOTH, $key = "" )
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
+        $result = [];
+        while ( $row = $this->queryResult->fetch_array ( $resultType ) )
         {
-            unset ( $this->rowSet );
-            unset ( $this->row );
-            $result = array ();
-            while ( $this->rowSet = mysql_fetch_array ( $query_id, $resultType ) )
-            {
-                $row = $this->rowSet;
-                if ( $key )
-                    $result[$row[$key]] = $row;
-                else
-                    $result[] = $row;
-            }
-
-            return $result;
-        }
-        else
-            return false;
-    }
-
-    function fetchObject ( $query_id = 0, $class_name = null )
-    {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
-        {
-            if ( $class_name )
-                $this->object = mysql_fetch_object ( $query_id, $class_name );
+            if ( $key )
+                $result[$row[$key]] = $row;
             else
-                $this->object = mysql_fetch_object ( $query_id );
-
-            return $this->object;
+                $result[] = $row;
         }
-        else
-            return false;
+
+        return $result;
     }
 
-    function fetchObjectSet ( $query_id = 0, $class_name = null, $field = "" )
+    function fetchObject ( $className = null )
     {
-        $result = array ();
-        if ( !$query_id )
-            $query_id = $this->queryResult;
+        $class = $className ? : "stdClass";
+        $object = $this->queryResult->fetch_object ( $class );
+        return $object;
+    }
 
-        if ( $query_id )
+    function fetchObjectSet ( $className = 'stdClass', $field = "" )
+    {
+        $class = $className ? : "stdClass";
+        $result = [];
+        while ( $object = $this->queryResult->fetch_object ( $class ) )
         {
-            if ( $class_name )
-            {
-                while ( $object = mysql_fetch_object ( $query_id, $class_name ) )
-                {
-                    if ( $field )
-                        $result[$object->$field] = $object;
-                    else
-                        $result[] = $object;
-                }
-            }
+            if ( $field )
+                $result[$object->$field] = $object;
             else
-            {
-                while ( $object = mysql_fetch_object ( $query_id ) )
-                {
-                    if ( $field )
-                        $result[$object->$field] = $object;
-                    else
-                        $result[] = $object;
-                }
-            }
-
-            return $result;
+                $result[] = $object;
         }
-        else
-            return false;
+
+        return $result;
     }
 
-    function fetchField ( $field = 0, $rownum = -1, $query_id = 0 )
+    function fetchField ( $field = 0, $rownum = -1 )
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
+        if ( $rownum > -1 )
+            $this->queryResult->data_seek ( $rownum );
 
-        if ( $query_id )
-        {
-            if ( $rownum > -1 )
-                $result = mysql_result ( $query_id, $rownum, $field );
-            else
-            {
-                if ( empty ( $this->row ) && empty ( $this->rowset ) )
-                {
-                    if ( $this->fetchRow () )
-                        $result = $this->row[$field];
-                    else
-                        $result = null;
-                }
-                else
-                {
-                    if ( $this->rowSet )
-                        $result = $this->rowSet[$field];
-                    else if ( $this->row )
-                        $result = $this->row[$field];
-                }
-            }
+        $row = $this->fetchRow ();
+        $result = $row[$field];
 
-            return $result;
-        }
-        else
-            return false;
+        return $result;
     }
 
-    function rowSeek ( $rownum, $query_id = 0 )
+    function fetchFieldSet ( $field = 0 )
     {
-        if ( !$query_id )
-            $query_id = $this->queryResult;
-
-        if ( $query_id )
+        $result = [];
+        while ( $row = $this->queryResult->fetch_array () )
         {
-            $result = mysql_data_seek ( $query_id, $rownum );
-            return $result;
+            $result[] = $row[$field];
         }
-        else
-            return false;
+
+        return $result;
     }
 
-    function nextId ()
+    function insertId ()
     {
-        if ( $this->dbConnectId )
-        {
-            $result = mysql_insert_id ( $this->dbConnectId );
-            return $result;
-        }
-        else
-            return false;
+        $result = $this->dbConnect->insert_id;
+        return $result;
     }
 
-    function freeResult ( $query_id = 0 )
+    public function escapeString ( $string )
     {
-        if ( !$query_id )
-        {
-            $query_id = $this->queryResult;
-        }
+        return $this->dbConnect->real_escape_string ( $string );
+    }
 
-        if ( $query_id )
-        {
-            unset ( $this->row );
-            unset ( $this->rowSet );
-            unset ( $this->object );
-            unset ( $this->objectSet );
-            mysql_free_result ( $query_id );
-
-            return true;
-        }
-        else
-            return false;
+    function freeResult ()
+    {
+        $this->queryResult->free ();
     }
 
     function sqlError ( /* $query_id = 0 */ )
     {
-        $result["message"] = mysql_error ( $this->dbConnectId );
-        $result["code"] = mysql_errno ( $this->dbConnectId );
+        $result["message"] = $this->dbConnect->error;
+        $result["code"] = $this->dbConnect->errno;
 
         return $result;
     }
@@ -367,7 +230,7 @@ class Mysql implements DbInterface
     {
         if ( $trigger )
         {
-            $errorNumber = $this->dbConnectId ? mysql_errno ( $this->dbConnectId ) : "";
+            $errorNumber = $this->dbConnect ? $this->dbConnect->errno : "";
             $sql = $this->query ? " - \"" . $this->query . "\"" : "";
             $msg = "Ошибка:" . $errorNumber . " " . $event . $sql . " " . Tools::getBackTraceLine ( 2 );
             throw new CmsException ( $msg /*$errorNumber new Message( $msg, "EXIT" ) */ );

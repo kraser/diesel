@@ -54,13 +54,13 @@ class AdminUsers
     function login ()
     {
         $godModeRef = Starter::app ()->session->getParameter ( 'godmode_ref' );
-        if ( !$godModeRef )
+        if ( !$godModeRef && array_key_exists ( 'HTTP_REFERER', $_SERVER ) )
             Starter::app ()->session->setParameter ( 'godmode_ref', $_SERVER['HTTP_REFERER'] );
 
         if ( !empty ( $_POST['send'] ) )
         {
             $login = SqlTools::escapeString ( $_POST['login'] );
-            $user = SqlTools::selectRow ( "SELECT * FROM `prefix_admin_users` WHERE `login`='$login' AND `password`='" . md5 ( $_POST['password'] ) . "'", MYSQL_ASSOC );
+            $user = SqlTools::selectRow ( "SELECT * FROM `prefix_admin_users` WHERE `login`='$login' AND `password`='" . md5 ( $_POST['password'] ) . "'", MYSQLI_ASSOC );
             if ( !empty ( $user ) )
             {
                 Starter::app ()->session->setParameter ( 'admin', $user );
@@ -99,7 +99,7 @@ class AdminUsers
         if ( $adminKey != md5 ( $_SERVER['HTTP_USER_AGENT'] . $_SERVER['REMOTE_ADDR'] . $admin['password'] . 'douglas' ) )
             $this->logout ();
 
-        $admin = SqlTools::selectRow ( "SELECT * FROM `prefix_admin_users` WHERE `id`=" . (( int ) $admin['id']) . " AND `login`='" . SqlTools::escapeString ( $admin['login'] ) . "' AND `password`='" . SqlTools::escapeString ( $admin['password'] ) . "'", MYSQL_ASSOC );
+        $admin = SqlTools::selectRow ( "SELECT * FROM `prefix_admin_users` WHERE `id`=" . (( int ) $admin['id']) . " AND `login`='" . SqlTools::escapeString ( $admin['login'] ) . "' AND `password`='" . SqlTools::escapeString ( $admin['password'] ) . "'", MYSQLI_ASSOC );
         if ( is_null ( $admin ) )
             $this->logout ();
 

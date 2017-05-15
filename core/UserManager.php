@@ -1,19 +1,19 @@
 <?php
 
 /**
- *
+ * @deprecated since version number
  */
-class UserManager implements ServiceRegistr
+class UserManager extends CmsComponent
 {
 
-    private $user;
-
-    /**
-     * Инициализирует параметры для авторизации пользователя
-     */
-    public function __construct ()
+    public function __construct ( $alias, $parent )
     {
-        //spl_autoload_register( "UsersClasses" );
+        parent::__construct ( $alias, $parent );
+    }
+
+    public function init ()
+    {
+        parent::init();
     }
 
     private function find ( $params = null )
@@ -36,6 +36,10 @@ class UserManager implements ServiceRegistr
 
                 case "login":
                     $conditions[] = "`login`='" . SqlTools::escapeString ( $value ) . "'";
+                    break;
+
+                case "password":
+                    $conditions[] = "`password`='" . md5 ( SqlTools::escapeString ( $value ) ) . "'";
                     break;
 
                 case "status":
@@ -79,16 +83,18 @@ class UserManager implements ServiceRegistr
             u.`lastEnter` AS lastEnter
         FROM `prefix_users` u
         $whereClause";
-        $users = SqlTools::selectObjects ( $query, "CmsUser", "id" );
+        $users = SqlTools::selectObjects ( $query, "CmsWebUser", "id" );
         foreach ( $users as $user )
         {
-            $user->name = $user->name ? : ( $user->firstName && $user->lastName ? $user->firstName . " " . $user->lastName : $user->login );
+            $user->name = $user->name ?
+                : ( $user->firstName && $user->lastName
+                ? $user->firstName . " " . $user->lastName : $user->login );
         }
 
         return $users;
     }
 
-    public function getData ( $params )
+    public function getUsers ( $params )
     {
         return $this->find ( $params );
     }
@@ -183,7 +189,7 @@ class UserManager implements ServiceRegistr
     {
         if ( !$userId )
         {
-            $data = new CmsUser();
+            $data = new CmsWebUser();
             $data->id = 0;
         }
         else

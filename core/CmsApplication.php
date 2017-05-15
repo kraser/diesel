@@ -33,7 +33,8 @@ class CmsApplication extends CmsModule
             "controllers" => DOCROOT . DS . 'controllers',
             'widgets'=> DOCROOT . DS . 'widgets',
             'behaviors' => DOCROOT . DS . "behaviors",
-            'site' => DOCROOT . DS . "theme"
+            'site' => DOCROOT . DS . "theme",
+            'console' => DOCROOT . DS . "console"
         ];
 		if ( isset ( $config['aliases'] ) )
         {
@@ -57,7 +58,7 @@ class CmsApplication extends CmsModule
         $config['components'] =
         [
             'installer' => 'Install',
-            'urlManager' => "UriAnalizer",
+            'urlManager' => "components.UriAnalizer",
             'xlsReader' => 'components.XlsParser.XlsParser',
             "headManager" => 'components.Header',
             'content' => 'components.SiteContent',
@@ -68,7 +69,12 @@ class CmsApplication extends CmsModule
                 'class' => "components.SessionManager",
                 'sessionName' => "CMS_SESSION",
                 'lifeTime' => 36000
-            ]
+            ],
+            'messanger' => 'components.Messanger',
+            'userIdentity' => 'components.UserIdentity',
+            'usersManager' => 'components.UsersManager',
+            'router' => 'components.Router',
+            'props' => 'components.Properties'
         ];
 //        $config['controllers'] =
 //        [
@@ -83,7 +89,7 @@ class CmsApplication extends CmsModule
     public function init ()
     {
         parent::init ();
-        UserIdentity::init ();
+        //UserIdentity::init ();
     }
 
     public function runController ( $route )
@@ -194,6 +200,9 @@ class CmsApplication extends CmsModule
         $this->$parameter = $value;
     }
 
+    /**
+     * @return UriAnalizer
+     */
     public function getUrlManager ()
     {
         return $this->getComponent ( "urlManager" );
@@ -222,5 +231,31 @@ class CmsApplication extends CmsModule
     public function getSession ()
     {
         return $this->getComponent ( "session" );
+    }
+
+    public function getUserIdentity ()
+    {
+        return $this->getComponent ( "userIdentity" );
+    }
+
+    public function getUsersManager ()
+    {
+        return $this->getComponent ( "usersManager" );
+    }
+
+    public function getRouter ()
+    {
+        return $this->getComponent ( "router" );
+    }
+
+    public function getProps ()
+    {
+        return $this->getComponent ( "props" );
+    }
+
+
+    public function getUser ()
+    {
+        return $this->getUserIdentity ()->user;
     }
 }

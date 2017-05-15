@@ -50,7 +50,7 @@ class Portfolio extends Component
             . "AND `module_id`=" . ( int ) $id . " "
             . "AND `module_table`='" . $table . "' "
             . "AND (`title`!='' OR `keywords`!='' OR `description`!='')";
-        $this->seo = SqlTools::selectRow ( $sql, MYSQL_ASSOC );
+        $this->seo = SqlTools::selectRow ( $sql, MYSQLI_ASSOC );
         if ( !empty ( $this->seo ) )
         {
             //Keywords
@@ -170,7 +170,7 @@ class Portfolio extends Component
             else
                 $product_sql = "AND `nav` = '" . SqlTools::escapeString ( $curProduct ) . "'";
 
-            $productData = SqlTools::selectRows ( "SELECT * FROM `prefix_portfolio` WHERE `deleted`='N' AND `show`='Y' AND `top`=" . ( int ) $curTopic['id'] . " $product_sql", MYSQL_ASSOC );
+            $productData = SqlTools::selectRows ( "SELECT * FROM `prefix_portfolio` WHERE `deleted`='N' AND `show`='Y' AND `top`=" . ( int ) $curTopic['id'] . " $product_sql", MYSQLI_ASSOC );
 
             $productCount = count ( $productData );
             if ( $productCount == 0 )
@@ -249,7 +249,7 @@ class Portfolio extends Component
         $query = "SELECT *, p.`id` AS proj_id FROM `prefix_portfolio` AS p"
             . " LEFT JOIN `prefix_images` As i ON (i.module_id=p.id AND i.module='Portfolio' AND i.`main`='Y')"
             . " WHERE p.`top`='" . $topic_id . "' AND p.`deleted`='N' AND p.`show`='Y'";
-        $projects = SqlTools::selectRows ( $query, MYSQL_ASSOC );
+        $projects = SqlTools::selectRows ( $query, MYSQLI_ASSOC );
 
         foreach ( $projects as $k => $project )
         {
@@ -271,7 +271,7 @@ class Portfolio extends Component
             LEFT JOIN `prefix_images` As i ON (i.module_id=p.id AND i.module='Portfolio' AND i.`main`='Y')
             WHERE p.`top`='" . $topic_id . "' AND p.`deleted`='N' AND p.`show`='Y'";
 
-        $projects = SqlTools::selectRows ( $query, MYSQL_ASSOC );
+        $projects = SqlTools::selectRows ( $query, MYSQLI_ASSOC );
 
         foreach ( $projects as $k => $project )
         {
@@ -279,7 +279,7 @@ class Portfolio extends Component
         }
 
         $query = "SELECT * FROM `prefix_portfolio_topics` WHERE `id`='" . $topic_id . "' LIMIT 1";
-        $category = SqlTools::selectRow ( $query, MYSQL_ASSOC );
+        $category = SqlTools::selectRow ( $query, MYSQLI_ASSOC );
 
         return tpl ( 'modules/' . __CLASS__ . '/list', array (
             'name' => $this->currentDocument->title,
@@ -518,7 +518,7 @@ class Portfolio extends Component
             FROM `prefix_portfolio` AS p
             WHERE p.`deleted`='N' AND p.`show`='Y' AND p.`id`='" . $this->product['id'] . "'
             LIMIT 1";
-        $project = SqlTools::SelectRow ( $query_project, MYSQL_ASSOC );
+        $project = SqlTools::SelectRow ( $query_project, MYSQLI_ASSOC );
 
         $query_image = "SELECT *
             FROM `prefix_portfolio_images` AS pi
@@ -526,14 +526,14 @@ class Portfolio extends Component
             WHERE i.`module`='Portfolio' AND i.`module_id`='" . $project['id'] . "'
             ORDER BY i.`main`, pi.`order`";
 
-        $project['images'] = SqlTools::SelectRows ( $query_image, MYSQL_ASSOC );
+        $project['images'] = SqlTools::SelectRows ( $query_image, MYSQLI_ASSOC );
 
         // Категория
         $query_topic = "SELECT *
             FROM `prefix_portfolio_topics`
             WHERE `id`='" . $project['top'] . "'
             LIMIT 1";
-        $topic = SqlTools::selectRow ( $query_topic, MYSQL_ASSOC );
+        $topic = SqlTools::selectRow ( $query_topic, MYSQLI_ASSOC );
 
         // Следующий проект
         $query_next = "SELECT p.*
@@ -542,7 +542,7 @@ class Portfolio extends Component
                 FROM `prefix_portfolio` AS pn
                 WHERE pn.`id`>'" . $project['id'] . "' AND pn.`top`='" . $topic['id'] . "' AND `deleted`='N' AND `show`='Y')";
 
-        $project_next = SqlTools::SelectRow ( $query_next, MYSQL_ASSOC );
+        $project_next = SqlTools::SelectRow ( $query_next, MYSQLI_ASSOC );
         $project_next = ($project_next !== false) ? $this->Link ( $project_next['top'], $project_next['nav'] ? $project_next['nav'] : $project_next['id']  ) : null;
 
         // Предыдущий проект
@@ -552,7 +552,7 @@ class Portfolio extends Component
                 FROM `prefix_portfolio` AS pp
                 WHERE pp.`id`<'" . $project['id'] . "' AND pp.`top`='" . $topic['id'] . "' AND `deleted`='N' AND `show`='Y')";
 
-        $project_previous = SqlTools::SelectRow ( $query_previous, MYSQL_ASSOC );
+        $project_previous = SqlTools::SelectRow ( $query_previous, MYSQLI_ASSOC );
         $project_previous = ($project_previous !== false) ? $this->Link ( $project_previous['top'], $project_previous['nav'] ? $project_previous['nav'] : $project_previous['id']  ) : null;
 
         // Генерация заголовка страницы (meta title)
@@ -663,7 +663,7 @@ class Portfolio extends Component
                     . " LEFT JOIN `prefix_images` AS i ON (i.module_id=p.id AND i.module='Portfolio' AND i.`main`='Y')"
                     . " LEFT JOIN `prefix_portfolio_topics` AS t ON (p.top=t.id)"
                     . " WHERE p.`top`='" . $cat->id . "' AND p.`deleted`='N' AND p.`show`='Y'" . $sql;
-                $result = SqlTools::selectRows ( $query, MYSQL_ASSOC );
+                $result = SqlTools::selectRows ( $query, MYSQLI_ASSOC );
 
                 foreach ( $result as $k => $project )
                 {
@@ -687,7 +687,7 @@ class Portfolio extends Component
                 . " LEFT JOIN `prefix_images` AS i ON (i.module_id=p.id AND i.module='Portfolio' AND i.`main`='Y')"
                 . " LEFT JOIN `prefix_portfolio_topics` AS t ON (p.top=t.id)"
                 . " WHERE p.`top`='" . $cat_id . "' AND p.`deleted`='N' AND p.`show`='Y'" . $sql;
-            $result = SqlTools::selectRows ( $query, MYSQL_ASSOC );
+            $result = SqlTools::selectRows ( $query, MYSQLI_ASSOC );
 
             foreach ( $result as $k => $project )
             {

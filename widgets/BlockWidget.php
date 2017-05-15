@@ -27,8 +27,13 @@ class BlockWidget extends CmsWidget
     public function run ()
     {
         $block = $this->getBlock ();
-        $template = $block->template ? : "block";
-        return $this->renderPart ( "widgets/$template", [ 'block' => $block ] );
+        if ( $block)
+        {
+            $template = $block->template ? : "block";
+            return $this->renderPart ( "widgets/$template", [ 'block' => $block ] );
+        }
+        else
+            return "";
     }
 
     private function getBlock ()

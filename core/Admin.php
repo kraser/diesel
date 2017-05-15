@@ -30,9 +30,7 @@ class Admin extends CmsApplication
                 require_once ( DOCROOT . '/admin/lib/' . $file );
         }
 
-        //Библиотеки с сайтовой части
         require_once ( TOOLS . DS . 'additionalFunctions.php' );
-        require_once ( TOOLS . DS . 'media.php' );
 
         //Подключение модулей
         $user = AdminUsers::getInstance ();
@@ -63,6 +61,11 @@ class Admin extends CmsApplication
 
         array_multisort ( $modules_sort, $modules );
         $this->adminModules = $modules;
+    }
+
+    public function getAdminModules ()
+    {
+        return $this->adminModules;
     }
 
     public function getModuleClass ( $module )

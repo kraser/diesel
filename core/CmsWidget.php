@@ -4,7 +4,7 @@
  *
  * @author kraser
  */
-class CmsWidget extends CmsController
+class CmsWidget extends CmsModule
 {
     public function __construct ( $alias, $parent )
     {

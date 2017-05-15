@@ -78,7 +78,9 @@ class CmsController extends CmsComponent
             $output = ob_get_contents ();
             ob_end_clean ();
         }
-        return $output;
+        $html = $this->replaceCustomTags ( $output );
+
+        return $html;
     }
 
     private function resolveTemplateFile ( $templateName )
@@ -102,5 +104,32 @@ class CmsController extends CmsComponent
             throw new Exception ( "Не найден шаблон <code style='font-weight:bold'>" . $templateName . "</code>" );
 
         return $templateFile;
+    }
+
+    /**
+     * <pre>Заменяет вставленные тэги блоков и форм {block:block_name_or_id} {form:form-name-or-id}</pre>
+     * @param String $html
+     */
+    private function replaceCustomTags ( $html )
+    {
+        $matches = [];
+        preg_match_all ( '/\{(block|form):([\w_-]+)\}/simx', $html, $matches, PREG_PATTERN_ORDER );
+        if ( isset ( $matches[0] ) && !empty ( $matches ) )
+        {
+            for ( $i = 0, $c = count ( $matches[0] ); $i < $c; $i++ )
+            {
+                if ( isset ( $matches[1][$i] ) )
+                {
+                    if ( $matches[1][$i] == 'block' )
+                        $replacement = $this->widget ( "BlockWidget", [ 'blockId' => $matches[2][$i] ], true );
+                    else if ( $matches[1][$i] == 'form' )
+                        $replacement = $this->widget ( "FormWidget", [ 'formId' => $matches[2][$i] ], true );
+
+                    $html = str_replace ( $matches[0][$i], $replacement, $html );
+                }
+            }
+        }
+
+        return $html;
     }
 }

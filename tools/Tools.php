@@ -95,7 +95,7 @@ class Tools
     {
         if ( empty ( $GLOBALS['modulesSettings'] ) )
         {
-            $rows = SqlTools::selectRows ( "SELECT * FROM `prefix_settings`", MYSQL_ASSOC );
+            $rows = SqlTools::selectRows ( "SELECT * FROM `prefix_settings`", MYSQLI_ASSOC );
             foreach ( $rows as $row )
             {
                 $GLOBALS['modulesSettings'][$row['module']][$row['callname']] = $row;
@@ -237,7 +237,7 @@ class Tools
         array_unshift ( $ret, $category );
 
         $query = "SELECT `id` FROM `prefix_products_topics` WHERE `top`='" . ( int ) $category . "' AND `deleted`='N'";
-        $categories = SqlTools::selectRows ( $query, MYSQL_ASSOC );
+        $categories = SqlTools::selectRows ( $query, MYSQLI_ASSOC );
         $categories = ArrayTools::pluck ( $categories, 'id' );
         foreach ( $categories as $key => $cat )
         {
@@ -250,7 +250,7 @@ class Tools
 
     /**
      * <pre>Возвращает массив записей характеристик родительских категорий
-     * и переданной категории $cat (ассоциированных по MYSQL_ASSOC),
+     * и переданной категории $cat (ассоциированных по MYSQLI_ASSOC),
      * сортированных по категориям: корневые - в начале,
      * переданная категория - в конце</pre>
      * @param Array $category
@@ -266,7 +266,7 @@ class Tools
             . " AND `show`='Y' "
             . " GROUP BY `tagId`"
             . " ORDER BY `moduleId` DESC";
-        $tags = SqlTools::selectRows ( $query, MYSQL_ASSOC, 'tagId' );
+        $tags = SqlTools::selectRows ( $query, MYSQLI_ASSOC, 'tagId' );
 
         return $tags;
     }

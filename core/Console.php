@@ -9,6 +9,7 @@ class Console extends CmsApplication
     public function __construct ( $alias, $config )
     {
         parent::__construct ( $alias, $config );
+        Starter::import ( "console.*" );
     }
 
     public function Run ()
@@ -17,7 +18,7 @@ class Console extends CmsApplication
         unset ( $arguments[0] );
         $commandClass = array_shift ( $arguments );
         $rc = new ReflectionClass ( ucfirst ( $commandClass ) . "Command" );
-        $command = $rc->newInstance ( $arguments );
+        $command = $rc->newInstance ( ucfirst ( $commandClass ), $this, $arguments );
         $command->Run();
     }
 }

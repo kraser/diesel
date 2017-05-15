@@ -43,29 +43,27 @@ interface DbInterface
 
     public function sqlQuery ( $query, $transaction );
 
-    public function numRows ( $queryId );
+    public function numRows ();
 
     public function affectedRows ();
 
-    public function numFields ( $queryId );
+    public function numFields ();
 
-    public function fieldName ( $offset, $queryId );
+    public function fieldName ( $offset );
 
-    public function fieldType ( $offset, $queryId );
+    public function fieldType ( $offset );
 
-    public function fetchRow ( $queryId );
+    public function fetchRow ( $type );
 
-    public function fetchRowSet ( $queryId );
+    public function fetchRowSet ( $type, $key );
 
-    public function fetchObject ( $queryId, $className );
+    public function fetchObject ( $className );
 
-    public function fetchObjectSet ( $queryId, $className );
+    public function fetchObjectSet ( $className, $key );
 
-    public function fetchField ( $field, $rowNum, $queryId );
+    public function fetchField ( $field, $rowNum );
 
-    public function rowSeek ( $rowNum, $queryId = 0 );
+    public function insertId ();
 
-    public function nextId ();
-
-    public function freeResult ( $queryId );
+    public function freeResult ();
 }

@@ -42,9 +42,7 @@ class Slider extends Component
             $imageSource = DS . SITE . DS . Starter::app ()->getTheme() . "/images/img1.png"; // картинка по умолчанию
             // извлекаем привязанные картинки из prefix_images
             $images = $this->data->GetData ( 'images', " AND `module_id`=$slide->id AND `main`='Y' AND `module`='Slider'" );
-            /* knn для работы с хранилищем изображений
-              $imgs = getImagesStorageByModuleId(__CLASS__, $v['id'], true);
-             */
+
             if ( $images )
             {
                 foreach ( $images as $image )

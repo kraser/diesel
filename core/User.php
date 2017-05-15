@@ -1,7 +1,7 @@
 <?php
 
 /**
- *
+ * @deprecated since version number
  */
 class User
 {

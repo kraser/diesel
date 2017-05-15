@@ -56,10 +56,8 @@ define ( 'INSTALL', DOCROOT . DS . 'dbData' .DS . 'install' );         // Кор
  */
 define ( 'MIGRATE', DOCROOT . DS . 'dbData' .DS . 'migration' );
 
-
-
-define ( 'SID', 'CMS_SESSION' );
-
 define ( 'NOT_FOUND_IMAGE_FILE', DS . 'images' . DS . 'default.png' );      // Картинка, подставляемая вместо не найденного изображения для image() из media.php
 define ( 'DOCUMENTS', DOCROOT . DS . DOC_FOLDER );             // Директория с прайсами (относительно корневой)
 define ( 'MIMETYPES', DS . 'images' . DS .'mimetypes' );                   // Директория хранилища иконок миме-типов
+
+define ('TIMEZONE','Asia/Novosibirsk');

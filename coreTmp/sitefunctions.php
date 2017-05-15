@@ -8,7 +8,7 @@
  */
 function admGetContentTable ( $table = 'content' )
 {
-    $siteDocuments = SqlTools::selectRows ( "SELECT * FROM `prefix_$table` WHERE `deleted`='N' AND `show`='Y' ORDER BY `top`,`order`", MYSQL_ASSOC, "id" );
+    $siteDocuments = SqlTools::selectRows ( "SELECT * FROM `prefix_$table` WHERE `deleted`='N' AND `show`='Y' ORDER BY `top`,`order`", MYSQLI_ASSOC, "id" );
 
     $GLOBALS['siteDocsByModule'] = array ();
     foreach ( $siteDocuments as $doc )
@@ -60,7 +60,7 @@ function admGetSet ( $module, $callname, $default = '' )
     global $modulesSettings;
     if ( empty ( $modulesSettings ) )
     {
-        $sets = SqlTools::selectRows ( "SELECT * FROM `prefix_settings`", MYSQL_ASSOC );
+        $sets = SqlTools::selectRows ( "SELECT * FROM `prefix_settings`", MYSQLI_ASSOC );
         foreach ( $sets as $k => $v )
             $modulesSettings[$v['module']][$v['callname']] = $v;
     }

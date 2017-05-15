@@ -7,9 +7,12 @@
  */
 class CmsModel extends CmsComponent
 {
+    const NO_LIMIT = 0;
+
     public function __construct ( $alias, $parent )
     {
         parent::__construct ( $alias, $parent );
+        $this->pageSize = 10;
     }
 
     private $table;
@@ -57,12 +60,12 @@ class CmsModel extends CmsComponent
         $this->modelClass = $className;
     }
 
-    public function doSearch ( $searchParams, $where, $order )
+    public function doSearch ( $searchParams, $where = '', $order = '' )
     {
         $query = $this->createSelectQuery ( $searchParams, $where, $order );
         $itemCount = SqlTools::selectValue ( "SELECT COUNT(*) FROM ($query) sq" );
         $offset = array_key_exists ( "page", $searchParams ) ? $searchParams['page'] - 1 : 0;
-        if ( $this->pageSize < $itemCount && !array_key_exists ( 'limit', $searchParams ) )
+        if ( $this->pageSize != CmsModel::NO_LIMIT && $this->pageSize < $itemCount && !array_key_exists ( 'limit', $searchParams ) )
             $limit = " LIMIT " . $offset * $this->pageSize . ", " . $this->pageSize;
         else
             $limit = "";
@@ -197,7 +200,7 @@ class CmsModel extends CmsComponent
         return $castValue;
     }
 
-    private $pageSize = 10;
+    private $pageSize;
     public function getPageSize ()
     {
         return $this->pageSize;

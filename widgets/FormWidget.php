@@ -42,7 +42,7 @@ class FormWidget extends CmsWidget
     /**
      * <pre>Выбирает по alias/id форму и возвращает её</pre>
      */
-    private function getForm ( $id )
+    private function getForm ()
     {
         $where =
         [
