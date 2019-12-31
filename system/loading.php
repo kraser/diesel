@@ -5,7 +5,7 @@ error_reporting ( E_ALL & ~E_DEPRECATED );
 
 require_once ( TOOLS . DS . '_tools.php' );
 require_once ( TOOLS . DS . 'deprecatedTools.php' );
-require_once ( TOOLS . DS . 'DevHelper.php' );
+//require_once ( TOOLS . DS . 'DevHelper.php' );
 require_once ( TOOLS . DS . 'systemFunctions.php' );
 require_once ( TOOLS . DS . 'additionalFunctions.php' );
 require_once ( TOOLS . DS . 'comments.php' );
